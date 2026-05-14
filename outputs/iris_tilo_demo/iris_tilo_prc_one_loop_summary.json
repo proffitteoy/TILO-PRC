@@ -1,0 +1,23 @@
+{
+  "seed": 42,
+  "n_samples": 150,
+  "knn_k_used": 6,
+  "root": {
+    "quality": 0.2765820855098123,
+    "split_loc": 82,
+    "left_size": 83,
+    "right_size": 67,
+    "pinch_ratio": 0.2765820855098123,
+    "ncut": 0.04556240110595579
+  },
+  "children": {
+    "left": {
+      "quality": 0.3911768941323276,
+      "split_loc": 27
+    },
+    "right": {
+      "quality": 0.42642630664464637,
+      "split_loc": 51
+    }
+  }
+}

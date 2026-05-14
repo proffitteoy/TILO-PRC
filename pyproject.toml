@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyprc"
+version = "0.2.0"
+description = "Pure Python implementation of Pinch Ratio Clustering (PRC/TILO)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+dependencies = [
+  "numpy>=1.23"
+]
+
+[project.optional-dependencies]
+sparse = ["scipy>=1.9"]
+
+[project.scripts]
+pinchRatioClustering = "pyprc.cli_pinch_ratio_clustering:main"
+genSimMatrix = "pyprc.cli_gen_sim_matrix:main"
+
+[tool.setuptools]
+packages = ["pyprc"]
+py-modules = ["prc"]
