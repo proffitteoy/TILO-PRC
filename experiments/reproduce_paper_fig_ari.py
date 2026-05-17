@@ -844,7 +844,6 @@ def run_all_methods(
             labels_km.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
-            preserve_init_effect=True,
         ).tolist(),
     )
 
@@ -879,7 +878,6 @@ def run_all_methods(
             labels_sp.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
-            preserve_init_effect=True,
         ).tolist(),
     )
 
@@ -904,7 +902,6 @@ def run_all_methods(
             labels_db.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
-            preserve_init_effect=True,
         ).tolist(),
     )
 
@@ -976,7 +973,7 @@ def run_all_methods(
         f"PRC similarity = {prc_similarity}; PRC sparse = {prc_use_sparse}; "
         f"baseline input space = {baseline_input_space}; "
         f"tune_baselines={tune_baselines}; prc_noise_last={prc_noise_last}; "
-        "preserve_init_diff_for_kmeans_dbscan_spectral=True; "
+        "preserve_init_diff_for_kmeans_dbscan_spectral=False; "
         f"vote_missing_strategy={vote_missing_strategy if dataset_name.lower() == 'vote' else 'n/a'}"
     )
     return results, details

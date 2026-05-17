@@ -23,11 +23,11 @@
       "TILO-NCUT": 0.7322981167185345,
       "TILO-PRC": 0.9037675791580496,
       "K Means": 0.7302382722834697,
-      "TILO-PRC(K Means)": 0.7302382722834697,
+      "TILO-PRC(K Means)": 0.5187598278284823,
       "Spectral": 0.7591987071071522,
-      "TILO-PRC(Spectral)": 0.7591987071071522,
+      "TILO-PRC(Spectral)": 0.7073626391173136,
       "DBScan": 0.5637510205230709,
-      "TILO-PRC(DBScan)": 0.5637510205230709,
+      "TILO-PRC(DBScan)": 0.9037675791580496,
       "Aff. Prop.": 0.5988233855933499,
       "TILO-PRC(Aff. Prop.)": 0.9037675791580496,
       "Mean Shift": 0.5583714437541352,
@@ -56,10 +56,10 @@
       "TILO-NCUT": 0.112298,
       "TILO-PRC": 0.003768,
       "TILO-PRC(Aff. Prop.)": 0.003768,
-      "TILO-PRC(DBScan)": -0.336249,
-      "TILO-PRC(K Means)": -0.169762,
+      "TILO-PRC(DBScan)": 0.003768,
+      "TILO-PRC(K Means)": -0.38124,
       "TILO-PRC(Mean Shift)": 0.003768,
-      "TILO-PRC(Spectral)": -0.140801
+      "TILO-PRC(Spectral)": -0.192637
     },
     "details": {
       "baseline_params": {
@@ -93,7 +93,7 @@
         }
       },
       "notes": [
-        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=True; vote_missing_strategy=n/a"
+        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=False; vote_missing_strategy=n/a"
       ],
       "tilo_trial_ari": {
         "NCUT": {
@@ -124,11 +124,11 @@
       "TILO-NCUT": 0.58687832100524,
       "TILO-PRC": 0.58687832100524,
       "K Means": 0.6274073496688722,
-      "TILO-PRC(K Means)": 0.6274073496688722,
+      "TILO-PRC(K Means)": 0.58687832100524,
       "Spectral": 0.6137480237040862,
-      "TILO-PRC(Spectral)": 0.6137480237040862,
+      "TILO-PRC(Spectral)": 0.58687832100524,
       "DBScan": 0.5503485044949525,
-      "TILO-PRC(DBScan)": 0.5503485044949525,
+      "TILO-PRC(DBScan)": 0.58687832100524,
       "Aff. Prop.": 0.26568200009470133,
       "TILO-PRC(Aff. Prop.)": 0.58687832100524,
       "Mean Shift": 0.600239402821921,
@@ -157,10 +157,10 @@
       "TILO-NCUT": 0.066878,
       "TILO-PRC": -0.233122,
       "TILO-PRC(Aff. Prop.)": -0.233122,
-      "TILO-PRC(DBScan)": -0.269651,
-      "TILO-PRC(K Means)": -0.192593,
+      "TILO-PRC(DBScan)": -0.233122,
+      "TILO-PRC(K Means)": -0.233122,
       "TILO-PRC(Mean Shift)": -0.233122,
-      "TILO-PRC(Spectral)": -0.206252
+      "TILO-PRC(Spectral)": -0.233122
     },
     "details": {
       "baseline_params": {
@@ -194,7 +194,7 @@
         }
       },
       "notes": [
-        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=True; vote_missing_strategy=drop_rows"
+        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=False; vote_missing_strategy=drop_rows"
       ],
       "tilo_trial_ari": {
         "NCUT": {
