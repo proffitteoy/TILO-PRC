@@ -42,12 +42,7 @@ from .io import (
     loadSparseGraph,
     loadtxt_matrix,
 )
-from .similarity import (
-    gaussSimMatrix,
-    gaussSimSparseMatrix,
-    knnSimMatrix,
-    knnSimSparseMatrix,
-)
+from .pipeline import GraphBuildConfig, build_similarity_matrix_from_points
 
 
 def _as_bool(raw_value: str, opt_name: str) -> bool:
@@ -278,25 +273,34 @@ def readData(
         )
         points = _slice_tags(data, data_config.pointDataConfig.tagLoc)
         if data_config.pointDataConfig.simType == PointSimilarityEnum.GAUSS_ADJ_SIM:
-            matrix, sigma = (
-                gaussSimSparseMatrix(points, gauss_policy.sigma, gauss_policy.mode, gauss_policy.threshold)
-                if data_config.useSparseMatrix
-                else gaussSimMatrix(points, gauss_policy.sigma, gauss_policy.mode, gauss_policy.threshold)
+            graph_config = GraphBuildConfig(
+                similarity="gauss",
+                use_sparse=data_config.useSparseMatrix,
+                gauss_sigma=gauss_policy.sigma,
+                gauss_mode=gauss_policy.mode,
+                gauss_threshold=gauss_policy.threshold,
             )
-            if run_config.verboseLevel > 2 and gauss_policy.sigma <= 0:
-                print(f"using Gaussian similarity sigma of {sigma}")
         elif data_config.pointDataConfig.simType == PointSimilarityEnum.KNN_ADJ_SIM:
-            matrix, k = (
-                knnSimSparseMatrix(points, knn_policy.k, knn_policy.mode, knn_policy.sigma)
-                if data_config.useSparseMatrix
-                else knnSimMatrix(points, knn_policy.k, knn_policy.mode, knn_policy.sigma)
+            graph_config = GraphBuildConfig(
+                similarity="knn",
+                use_sparse=data_config.useSparseMatrix,
+                knn_k=knn_policy.k,
+                knn_mode=knn_policy.mode,
+                knn_sigma=knn_policy.sigma,
             )
-            if run_config.verboseLevel > 2 and knn_policy.k <= 0:
-                print(f"using {k} nearest neighbor similarity.")
         else:
             raise PRCError(
                 f"Need to specify gaussian or knn point similarity. Not able to use {data_config.pointDataConfig.simType.name}."
             )
+        storage, graph_meta = build_similarity_matrix_from_points(points, graph_config)
+        matrix = storage.sparseMatrix if data_config.useSparseMatrix else storage.adjMatrix
+        if matrix is None:
+            raise PRCError("Failed to build similarity matrix.")
+        if run_config.verboseLevel > 2:
+            if "gauss_sigma_used" in graph_meta and gauss_policy.sigma <= 0:
+                print(f"using Gaussian similarity sigma of {graph_meta['gauss_sigma_used']}")
+            if "knn_meta" in graph_meta and knn_policy.k <= 0:
+                print(f"using {int(graph_meta['knn_meta'])} nearest neighbor similarity.")
     elif data_config.fileType == FileStructureEnum.ADJACENCY_DATA:
         matrix, vertex_weights = (
             loadSparseGraph(data_config.inputFileName, data_config.adjDataConfig.nodeOffset)

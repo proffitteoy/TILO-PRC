@@ -80,5 +80,19 @@ from .compat import (
     sparse_calcBoundaries,
     sparse_pinchRatioClustering,
 )
+from .pipeline import (
+    DEFAULT_BACKEND,
+    DEFAULT_PIPELINE,
+    GraphBuildConfig,
+    PrcPipelineService,
+    PrcExecutionBackend,
+    PythonPrcExecutionBackend,
+    build_similarity_matrix_from_points,
+    clone_prc_policy,
+    orders_from_label_blocks,
+    run_best_of_trials,
+    run_from_candidate_orders,
+    seed_global_prc_rng,
+)
 
 __all__ = [name for name in globals() if not name.startswith("_")]

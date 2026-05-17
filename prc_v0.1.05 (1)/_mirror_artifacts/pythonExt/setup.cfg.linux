@@ -1,4 +1,0 @@
-# add config data here.
-[build_ext]
-include_dirs=/home/drh/include/eigen3
-libraries = rt

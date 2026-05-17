@@ -487,6 +487,9 @@ def pinchRatioClustering_storage(
             mv_a, loc_a, val_a = _find_split_location_internal(
                 tmp_a, matrix, tmp_a, policy.metric, policy.prcEvalAllMetrics
             )
+            if not return_ro:
+                tmp_a.b.resize(0, 0.0)
+                tmp_a.m.clear()
             push_item(_PQStruct(-val_a, loc_a, tmp_a, mv_a))
 
             tmp_counts = TILO(tmp_b, matrix, policy.tiloPolicy)
@@ -497,6 +500,9 @@ def pinchRatioClustering_storage(
             mv_b, loc_b, val_b = _find_split_location_internal(
                 tmp_b, matrix, tmp_b, policy.metric, policy.prcEvalAllMetrics
             )
+            if not return_ro:
+                tmp_b.b.resize(0, 0.0)
+                tmp_b.m.clear()
             push_item(_PQStruct(-val_b, loc_b, tmp_b, mv_b))
     else:
         mvals, loc, value = _find_split_location_internal(rvorder, matrix, order, policy.metric, policy.prcEvalAllMetrics)

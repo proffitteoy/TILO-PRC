@@ -20,9 +20,18 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 import pyprc
+from pyprc.pipeline import (
+    GraphBuildConfig,
+    build_similarity_matrix_from_points,
+    clone_prc_policy as _clone_prc_policy_impl,
+    orders_from_label_blocks as _orders_from_label_blocks_impl,
+    run_best_of_trials as _run_best_of_trials_impl,
+    run_from_candidate_orders as _run_from_candidate_orders_impl,
+    seed_global_prc_rng as _seed_global_prc_rng_impl,
+)
 
 
-# ─── Data loading ───────────────────────────────────────────────────────────
+# --- Data loading ---
 
 def load_data_from_file(path: Path) -> Tuple[np.ndarray, np.ndarray]:
     data = np.loadtxt(path, dtype=float)
@@ -133,7 +142,7 @@ def standardize(x: np.ndarray) -> np.ndarray:
     return (x - mu) / sigma
 
 
-# ─── ARI computation ────────────────────────────────────────────────────────
+# --- ARI computation ---
 
 def _contingency(a: Sequence[int], b: Sequence[int]) -> np.ndarray:
     ua = sorted(set(int(v) for v in a))
@@ -164,7 +173,7 @@ def adjusted_rand_index(true: Sequence[int], pred: Sequence[int]) -> float:
     return float((sum_nij - expected) / denom)
 
 
-# ─── PRC helpers ────────────────────────────────────────────────────────────
+# --- PRC helpers ---
 
 def build_prc_matrix_from_points(
     points: np.ndarray,
@@ -176,36 +185,89 @@ def build_prc_matrix_from_points(
     gauss_sigma: float = -1.0,
     gauss_mode: pyprc.GaussSimAdjMode = pyprc.GaussSimAdjMode.GS_ADJ_THRESHOLD,
     gauss_threshold: float = 1e-10,
-) -> pyprc.MatrixStorage:
-    if similarity == "knn":
-        if use_sparse:
-            matrix_like, _ = pyprc.knnSimSparseMatrix(points, knn_k, knn_mode, knn_sigma)
-        else:
-            matrix_like, _ = pyprc.knnSimMatrix(points, knn_k, knn_mode, knn_sigma)
-    elif similarity == "gauss":
-        if use_sparse:
-            matrix_like, _ = pyprc.gaussSimSparseMatrix(points, gauss_sigma, gauss_mode, gauss_threshold)
-        else:
-            matrix_like, _ = pyprc.gaussSimMatrix(points, gauss_sigma, gauss_mode, gauss_threshold)
-    else:
-        raise ValueError(f"unknown PRC similarity type: {similarity}")
-    return pyprc.MatrixStorage(matrix_like)
+) -> Tuple[pyprc.MatrixStorage, Dict[str, Any]]:
+    return build_similarity_matrix_from_points(
+        points,
+        GraphBuildConfig(
+            similarity=similarity,
+            use_sparse=use_sparse,
+            knn_k=knn_k,
+            knn_mode=knn_mode,
+            knn_sigma=knn_sigma,
+            gauss_sigma=gauss_sigma,
+            gauss_mode=gauss_mode,
+            gauss_threshold=gauss_threshold,
+        ),
+    )
 
 
-def order_from_labels(labels: Sequence[int], n: int, noise_last: bool = True) -> pyprc.OrderObject:
-    if len(labels) != n:
-        raise ValueError(f"init labels size mismatch: {len(labels)} vs {n}")
-    buckets: Dict[int, List[int]] = {}
-    for idx, lbl in enumerate(labels):
-        buckets.setdefault(int(lbl), []).append(idx)
-    if noise_last:
-        keys = sorted(buckets.keys(), key=lambda k: (1 if k == -1 else 0, k))
+def _seed_global_prc_rng(seed: int) -> int:
+    """Mirror C++ CLI seeding semantics for repeated random initial orders."""
+    return _seed_global_prc_rng_impl(seed)
+
+
+def matrix_graph_stats(matrix: pyprc.MatrixStorage) -> Dict[str, float]:
+    n = int(matrix.rows())
+    if n <= 0:
+        return {
+            "n": 0,
+            "nnz": 0,
+            "density": 0.0,
+            "degree_min": 0.0,
+            "degree_mean": 0.0,
+            "degree_max": 0.0,
+            "edge_weight_min": 0.0,
+            "edge_weight_mean": 0.0,
+            "edge_weight_max": 0.0,
+        }
+
+    if matrix.adjMatrix is not None:
+        dense = np.asarray(matrix.adjMatrix, dtype=float)
+    elif getattr(matrix, "_sparse_kind", None) == "custom":
+        dense = matrix.sparseMatrix.to_dense()  # type: ignore[union-attr]
     else:
-        keys = sorted(buckets.keys())
-    order_vec: List[int] = []
-    for key in keys:
-        order_vec.extend(buckets[key])
-    return pyprc.OrderObject(data=order_vec)
+        dense = np.asarray(matrix.sparseMatrix.toarray(), dtype=float)  # type: ignore[union-attr]
+
+    nnz = int(np.count_nonzero(dense))
+    total = int(dense.size)
+    density = float(nnz / total) if total > 0 else 0.0
+    degree = np.asarray(dense.sum(axis=0), dtype=float).ravel()
+    nonzero_weights = dense[dense != 0.0]
+    if nonzero_weights.size == 0:
+        w_min = 0.0
+        w_mean = 0.0
+        w_max = 0.0
+    else:
+        w_min = float(np.min(nonzero_weights))
+        w_mean = float(np.mean(nonzero_weights))
+        w_max = float(np.max(nonzero_weights))
+    return {
+        "n": int(n),
+        "nnz": int(nnz),
+        "density": float(density),
+        "degree_min": float(np.min(degree)),
+        "degree_mean": float(np.mean(degree)),
+        "degree_max": float(np.max(degree)),
+        "edge_weight_min": w_min,
+        "edge_weight_mean": w_mean,
+        "edge_weight_max": w_max,
+    }
+
+
+def orders_from_labels(
+    labels: Sequence[int],
+    n: int,
+    noise_last: bool = True,
+    try_permutations: bool = False,
+    max_permutation_labels: int = 8,
+) -> Iterable[pyprc.OrderObject]:
+    return _orders_from_label_blocks_impl(
+        labels=labels,
+        n=n,
+        noise_last=noise_last,
+        try_permutations=try_permutations,
+        max_permutation_labels=max_permutation_labels,
+    )
 
 
 def clone_prc_policy(
@@ -217,24 +279,14 @@ def clone_prc_policy(
     prc_refine_tilo: Optional[bool] = None,
     tilo_max_iterations: Optional[int] = None,
 ) -> pyprc.PrcPolicyStruct:
-    return pyprc.PrcPolicyStruct(
-        tiloPolicy=pyprc.TiloPolicyStruct(
-            maxIterations=policy.tiloPolicy.maxIterations
-            if tilo_max_iterations is None
-            else int(tilo_max_iterations),
-            tiloEpsilon=policy.tiloPolicy.tiloEpsilon,
-        ),
-        metric=policy.metric if metric is None else metric,
-        prcRecurseTILO=policy.prcRecurseTILO if prc_recurse_tilo is None else bool(prc_recurse_tilo),
-        reverseOrderOnSplit=policy.reverseOrderOnSplit
-        if reverse_order_on_split is None
-        else bool(reverse_order_on_split),
-        prcReturnRecursiveOrder=policy.prcReturnRecursiveOrder
-        if prc_return_recursive_order is None
-        else bool(prc_return_recursive_order),
-        prcRefineTILO=policy.prcRefineTILO if prc_refine_tilo is None else bool(prc_refine_tilo),
-        prcEvalAllMetrics=policy.prcEvalAllMetrics,
-        prcReturnMetrics=policy.prcReturnMetrics,
+    return _clone_prc_policy_impl(
+        policy=policy,
+        metric=metric,
+        prc_recurse_tilo=prc_recurse_tilo,
+        reverse_order_on_split=reverse_order_on_split,
+        prc_return_recursive_order=prc_return_recursive_order,
+        prc_refine_tilo=prc_refine_tilo,
+        tilo_max_iterations=tilo_max_iterations,
     )
 
 
@@ -246,27 +298,14 @@ def _run_tilo_variant_best_of_trials(
     n_trials: int,
     seed_start: int,
 ) -> np.ndarray:
-    policy = clone_prc_policy(policy_template, metric=metric)
-    best_labels: Optional[np.ndarray] = None
-    best_counts: Optional[pyprc.PrcReturnStruct] = None
-    best_boundary: List[float] = []
-    for trial in range(n_trials):
-        pyprc._GLOBAL_C_RAND.srand(seed_start + trial + 1)
-        order = pyprc.initOrder_random(matrix.rows())
-        counts, labels = pyprc.pinchRatioClustering_storage(matrix, order, num_partitions, policy)
-        boundary = sorted(order.boundary().data(), reverse=True)
-        if best_labels is None:
-            best_labels = labels.copy()
-            best_counts = counts
-            best_boundary = list(boundary)
-            continue
-        if pyprc.cless(counts, best_counts, boundary, best_boundary):  # type: ignore[arg-type]
-            best_labels = labels.copy()
-            best_counts = counts
-            best_boundary = list(boundary)
-    if best_labels is None:
-        raise RuntimeError("TILO/PRC returned no labels")
-    return best_labels
+    return _run_best_of_trials_impl(
+        matrix=matrix,
+        num_partitions=num_partitions,
+        policy_template=policy_template,
+        metric=metric,
+        n_trials=n_trials,
+        seed_start=seed_start,
+    )
 
 
 def collect_tilo_trial_ari_stats(
@@ -280,8 +319,8 @@ def collect_tilo_trial_ari_stats(
 ) -> Dict[str, float]:
     policy = clone_prc_policy(policy_template, metric=metric)
     aris: List[float] = []
+    _seed_global_prc_rng(seed_start)
     for trial in range(n_trials):
-        pyprc._GLOBAL_C_RAND.srand(seed_start + trial + 1)
         order = pyprc.initOrder_random(matrix.rows())
         _, labels = pyprc.pinchRatioClustering_storage(matrix, order, num_partitions, policy)
         aris.append(adjusted_rand_index(y_true.tolist(), labels.tolist()))
@@ -333,6 +372,8 @@ def run_prc_from_init(
     policy_template: pyprc.PrcPolicyStruct,
     noise_last: bool = True,
     preserve_init_effect: bool = False,
+    try_label_permutations: bool = False,
+    max_permutation_labels: int = 8,
 ) -> np.ndarray:
     init_labels_arr = np.asarray(init_labels, dtype=int)
     if preserve_init_effect:
@@ -348,17 +389,25 @@ def run_prc_from_init(
         )
     else:
         policy = clone_prc_policy(policy_template, metric=pyprc.PrcMetricEnum.PinchRatio)
-    order = order_from_labels(init_labels, matrix.rows(), noise_last=noise_last)
-    try:
-        _, labels = pyprc.pinchRatioClustering_storage(matrix, order, num_partitions, policy)
-    except Exception:
-        if preserve_init_effect:
-            return init_labels_arr.copy()
-        raise
-    return labels
+    candidate_orders = orders_from_labels(
+        init_labels,
+        matrix.rows(),
+        noise_last=noise_last,
+        try_permutations=try_label_permutations,
+        max_permutation_labels=max_permutation_labels,
+    )
+    return _run_from_candidate_orders_impl(
+        matrix=matrix,
+        num_partitions=num_partitions,
+        policy_template=policy,
+        candidate_orders=candidate_orders,
+        metric=pyprc.PrcMetricEnum.PinchRatio,
+        continue_on_error=bool(preserve_init_effect),
+        fallback_labels=init_labels_arr if preserve_init_effect else None,
+    )
 
 
-# ─── Baseline clustering methods ───────────────────────────────────────────
+# --- Baseline clustering methods ---
 
 def _param_grid(grid: Dict[str, Sequence[Any]]) -> Iterable[Dict[str, Any]]:
     keys = list(grid.keys())
@@ -748,7 +797,7 @@ def run_mean_shift(x: np.ndarray, params: Dict[str, Any]) -> np.ndarray:
         return _mean_shift_fallback(x, bandwidth=bandwidth_value, bin_seeding=bin_seeding)
 
 
-# ─── Run all methods for one dataset ───────────────────────────────────────
+# --- Run all methods for one dataset ---
 
 def run_all_methods(
     data_file: Path,
@@ -765,7 +814,10 @@ def run_all_methods(
     tune_baselines: bool = False,
     prc_policy_template: Optional[pyprc.PrcPolicyStruct] = None,
     prc_noise_last: bool = False,
-    vote_missing_strategy: str = "drop_rows",
+    vote_missing_strategy: str = "half",
+    preserve_init_effect_for_baseline_init: bool = False,
+    try_label_permutations_for_seeded_baselines: bool = False,
+    max_label_permutation_labels: int = 8,
 ) -> Tuple[Dict[str, float], Dict[str, Any]]:
     vote_removed_rows = 0
     if dataset_name.lower() == "vote":
@@ -776,7 +828,7 @@ def run_all_methods(
     baseline_x = x_std if baseline_input_space == "standardized" else x_raw
     prc_points = x_std if use_standardized_for_prc else x_raw
     policy_template = prc_policy_template or pyprc.PrcPolicyStruct(metric=pyprc.PrcMetricEnum.PinchRatio)
-    matrix = build_prc_matrix_from_points(
+    matrix, graph_params = build_prc_matrix_from_points(
         prc_points,
         similarity=prc_similarity,
         use_sparse=prc_use_sparse,
@@ -844,6 +896,9 @@ def run_all_methods(
             labels_km.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
+            preserve_init_effect=preserve_init_effect_for_baseline_init,
+            try_label_permutations=try_label_permutations_for_seeded_baselines,
+            max_permutation_labels=max_label_permutation_labels,
         ).tolist(),
     )
 
@@ -878,6 +933,9 @@ def run_all_methods(
             labels_sp.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
+            preserve_init_effect=preserve_init_effect_for_baseline_init,
+            try_label_permutations=try_label_permutations_for_seeded_baselines,
+            max_permutation_labels=max_label_permutation_labels,
         ).tolist(),
     )
 
@@ -902,6 +960,9 @@ def run_all_methods(
             labels_db.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
+            preserve_init_effect=preserve_init_effect_for_baseline_init,
+            try_label_permutations=try_label_permutations_for_seeded_baselines,
+            max_permutation_labels=max_label_permutation_labels,
         ).tolist(),
     )
 
@@ -964,6 +1025,8 @@ def run_all_methods(
         "tilo_max_iterations": int(policy_template.tiloPolicy.maxIterations),
         "tilo_epsilon": float(policy_template.tiloPolicy.tiloEpsilon),
     }
+    details["graph_params"] = graph_params
+    details["graph_stats"] = matrix_graph_stats(matrix)
     if dataset_name.lower() == "vote":
         details["vote_missing_strategy"] = vote_missing_strategy
         details["vote_removed_rows"] = vote_removed_rows
@@ -973,13 +1036,16 @@ def run_all_methods(
         f"PRC similarity = {prc_similarity}; PRC sparse = {prc_use_sparse}; "
         f"baseline input space = {baseline_input_space}; "
         f"tune_baselines={tune_baselines}; prc_noise_last={prc_noise_last}; "
-        "preserve_init_diff_for_kmeans_dbscan_spectral=False; "
+        f"preserve_init_diff_for_kmeans_dbscan_spectral={preserve_init_effect_for_baseline_init}; "
+        f"try_label_permutations_for_kmeans_spectral_dbscan={try_label_permutations_for_seeded_baselines}; "
+        f"max_label_permutation_labels={max_label_permutation_labels}; "
+        f"tilo_selection_protocol=best_of_n_trials_with_pyprc.cless(n_trials={n_trials}); "
         f"vote_missing_strategy={vote_missing_strategy if dataset_name.lower() == 'vote' else 'n/a'}"
     )
     return results, details
 
 
-# ─── Plotting ───────────────────────────────────────────────────────────────
+# --- Plotting ---
 
 def plot_paper_figure(
     iris_results: Dict[str, float],
@@ -1098,7 +1164,7 @@ def plot_paper_figure(
     print(f"[OK] Saved figure: {out_path}")
 
 
-# ─── Paper reference values (read from figure) ────────────────────────────
+# --- Paper reference values (read from figure) ---
 
 PAPER_REFERENCE_NOTE = (
     "Approximate ARI values digitized from the provided paper figure image and "
@@ -1141,7 +1207,82 @@ def calc_delta_to_paper(results: Dict[str, float], paper: Dict[str, float]) -> D
     return {k: round(results[k] - paper[k], 6) for k in keys}
 
 
-# ─── Main ───────────────────────────────────────────────────────────────────
+def run_vote_protocol_sweep(
+    args: argparse.Namespace,
+    prc_policy_template: pyprc.PrcPolicyStruct,
+    prc_noise_last: bool,
+    tune_baselines: bool,
+    prc_use_sparse: bool,
+) -> Dict[str, Any]:
+    target = float(PAPER_VOTE_ARI["TILO-PRC"])
+    vote_paths: List[Path] = []
+    for candidate in [args.vote_data, REPO_ROOT / "house-votes-84.data", REPO_ROOT / "tests/vote_all.txt"]:
+        p = Path(candidate)
+        if p.exists() and p not in vote_paths:
+            vote_paths.append(p)
+    if not vote_paths:
+        raise FileNotFoundError("no vote dataset candidates found for sweep")
+
+    sweep_trials: List[int] = []
+    for v in [10, 20, int(args.n_trials), 100]:
+        if v > 0 and v not in sweep_trials:
+            sweep_trials.append(v)
+
+    sweep_rows: List[Dict[str, Any]] = []
+    for vote_path in vote_paths:
+        for missing_strategy in ["drop_rows", "half", "zero", "one", "column_mode"]:
+            for prc_input_space in ["raw", "standardized"]:
+                for prc_similarity in ["gauss", "knn"]:
+                    for n_trials in sweep_trials:
+                        results, details = run_all_methods(
+                            data_file=vote_path,
+                            num_partitions=args.vote_k,
+                            seed=args.seed,
+                            dbscan_eps=args.vote_dbscan_eps,
+                            dbscan_min_samples=args.vote_dbscan_min_samples,
+                            n_trials=n_trials,
+                            dataset_name="vote",
+                            use_standardized_for_prc=(prc_input_space == "standardized"),
+                            baseline_input_space=args.baseline_input_space,
+                            prc_similarity=prc_similarity,
+                            prc_use_sparse=prc_use_sparse,
+                            tune_baselines=tune_baselines,
+                            prc_policy_template=prc_policy_template,
+                            prc_noise_last=prc_noise_last,
+                            vote_missing_strategy=missing_strategy,
+                            preserve_init_effect_for_baseline_init=bool(
+                                args.preserve_init_effect_for_baseline_init
+                            ),
+                            try_label_permutations_for_seeded_baselines=resolve_seeded_label_permutations(
+                                args
+                            ),
+                            max_label_permutation_labels=int(args.max_label_permutation_labels),
+                        )
+                        vote_tilo_prc = float(results.get("TILO-PRC", 0.0))
+                        sweep_rows.append(
+                            {
+                                "vote_data": str(vote_path),
+                                "vote_missing_strategy": missing_strategy,
+                                "prc_input_space": prc_input_space,
+                                "prc_similarity": prc_similarity,
+                                "n_trials": int(n_trials),
+                                "tilo_prc": vote_tilo_prc,
+                                "delta_to_paper_tilo_prc": round(vote_tilo_prc - target, 6),
+                                "abs_delta_to_paper_tilo_prc": round(abs(vote_tilo_prc - target), 6),
+                                "details": details,
+                            }
+                        )
+
+    sweep_rows.sort(key=lambda x: x["abs_delta_to_paper_tilo_prc"])
+    return {
+        "target_vote_tilo_prc": target,
+        "total_runs": len(sweep_rows),
+        "top_10": sweep_rows[:10],
+        "runs": sweep_rows,
+    }
+
+
+# --- Main ---
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Reproduce paper ARI comparison figure with diagnostics")
@@ -1162,7 +1303,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--paper-profile",
         action="store_true",
-        help="Apply a historical C++/paper-like PRC configuration profile where the repository has evidence.",
+        help="Apply a C++-aligned profile: raw + gauss + sparse + vote(drop_rows), while keeping PRC recurse/refine flags at CLI defaults unless explicitly set.",
     )
     p.add_argument(
         "--prc-input-space",
@@ -1196,27 +1337,61 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--prc-return-recursive-order", action="store_true", help="Write back the recursively refined order.")
     p.add_argument("--prc-refine-tilo", action="store_true", help="Run RefineTILO after each TILO step.")
     p.add_argument(
+        "--preserve-init-effect-for-baseline-init",
+        action="store_true",
+        help="Use weak PRC (no recurse/refine, max TILO iter=1) for baseline-initialized PRC experiments.",
+    )
+    p.add_argument(
+        "--label-permutations-for-seeded-baselines",
+        action="store_true",
+        help="Enable label-block permutation scan for KMeans/Spectral/DBSCAN initial order conversion.",
+    )
+    p.add_argument(
+        "--no-label-permutations-for-seeded-baselines",
+        action="store_true",
+        help="Force disable label-block permutation scan for seeded baseline initial order conversion.",
+    )
+    p.add_argument(
+        "--max-label-permutation-labels",
+        type=int,
+        default=8,
+        help="Max unique labels to allow full label-block permutations for seeded baselines.",
+    )
+    p.add_argument(
         "--vote-missing-strategy",
         choices=["drop_rows", "half", "zero", "one", "column_mode"],
-        default="drop_rows",
-        help="How to handle vote missing values ('drop_rows' follows the paper preprocessing note).",
+        default="half",
+        help="How to handle vote missing values (paper protocol may vary by source implementation).",
+    )
+    p.add_argument(
+        "--sweep-vote-protocols",
+        action="store_true",
+        help="Run Vote protocol sweep (missing strategy/data source/input space/similarity/n_trials).",
     )
     return p.parse_args()
+
+
+def apply_paper_profile_overrides(args: argparse.Namespace) -> None:
+    """Apply a conservative C++-aligned profile without forcing extra PRC recursion flags."""
+    args.prc_input_space = "raw"
+    args.baseline_input_space = "raw"
+    args.prc_similarity = "gauss"
+    args.prc_dense = False
+    args.vote_missing_strategy = "drop_rows"
+
+
+def resolve_seeded_label_permutations(args: argparse.Namespace) -> bool:
+    enabled = bool(args.label_permutations_for_seeded_baselines)
+    if bool(args.no_label_permutations_for_seeded_baselines):
+        return False
+    return enabled
 
 
 def main() -> int:
     args = parse_args()
 
     if args.paper_profile:
-        args.prc_input_space = "raw"
-        args.baseline_input_space = "raw"
-        args.prc_similarity = "gauss"
-        args.prc_dense = False
-        # Historical C++ test scripts exercise this as the most complete PRC/TILO path.
-        args.prc_recurse_tilo = True
-        args.reverse_order_on_split = True
-        args.prc_return_recursive_order = True
-        args.prc_refine_tilo = True
+        apply_paper_profile_overrides(args)
 
     if args.use_paper_values:
         print("Using hardcoded paper ARI values for visual reference only.")
@@ -1235,6 +1410,7 @@ def main() -> int:
         args.vote_data = resolve_vote_dataset_path(args.vote_data)
         use_std_for_prc = args.prc_input_space == "standardized"
         tune_baselines = bool(args.tune_baselines and not args.no_tune_baselines)
+        try_label_permutations = resolve_seeded_label_permutations(args)
         # C++ initLabelsFile behavior (std::map key order) puts -1 first by default.
         noise_last = bool(args.prc_noise_last and not args.prc_noise_first)
         prc_use_sparse = not args.prc_dense
@@ -1247,95 +1423,136 @@ def main() -> int:
         )
         if use_std_for_prc or args.baseline_input_space == "standardized" or args.prc_similarity != "gauss":
             print(
-                "[WARN] 当前配置偏离原始 C++ 默认协议（raw + gauss + sparse）。"
-                "这通常会显著改变 ARI，尤其是 Iris 上 TILO-PRC。"
+                "[WARN] Current config deviates from C++-style default (raw + gauss + sparse). "
+                "This may significantly shift ARI, especially on Iris."
             )
 
-        print(
-            f"Running Iris (n_trials={args.n_trials}, prc_input={args.prc_input_space}, "
-            f"baseline_input={args.baseline_input_space}, prc_similarity={args.prc_similarity}, "
-            f"prc_sparse={prc_use_sparse}, tune_baselines={tune_baselines})..."
-        )
-        iris_results, iris_details = run_all_methods(
-            args.iris_data,
-            args.iris_k,
-            args.seed,
-            args.iris_dbscan_eps,
-            args.iris_dbscan_min_samples,
-            n_trials=args.n_trials,
-            dataset_name="iris",
-            use_standardized_for_prc=use_std_for_prc,
-            baseline_input_space=args.baseline_input_space,
-            prc_similarity=args.prc_similarity,
-            prc_use_sparse=prc_use_sparse,
-            tune_baselines=tune_baselines,
-            prc_policy_template=prc_policy_template,
-            prc_noise_last=noise_last,
-        )
-        print("Iris ARI results:")
-        for k, v in iris_results.items():
-            print(f"  {k:<25} ARI={v:.4f}")
-
-        print(
-            f"\nRunning Vote (n_trials={args.n_trials}, prc_input={args.prc_input_space}, "
-            f"baseline_input={args.baseline_input_space}, prc_similarity={args.prc_similarity}, "
-            f"prc_sparse={prc_use_sparse}, tune_baselines={tune_baselines})..."
-        )
-        vote_results, vote_details = run_all_methods(
-            args.vote_data,
-            args.vote_k,
-            args.seed,
-            args.vote_dbscan_eps,
-            args.vote_dbscan_min_samples,
-            n_trials=args.n_trials,
-            dataset_name="vote",
-            use_standardized_for_prc=use_std_for_prc,
-            baseline_input_space=args.baseline_input_space,
-            prc_similarity=args.prc_similarity,
-            prc_use_sparse=prc_use_sparse,
-            tune_baselines=tune_baselines,
-            prc_policy_template=prc_policy_template,
-            prc_noise_last=noise_last,
-            vote_missing_strategy=args.vote_missing_strategy,
-        )
-        print("Vote ARI results:")
-        for k, v in vote_results.items():
-            print(f"  {k:<25} ARI={v:.4f}")
-
-        diagnostics_payload = {
-            "mode": "experiment",
-            "config": {
-                "n_trials": args.n_trials,
-                "vote_data": str(args.vote_data),
-                "prc_input_space": args.prc_input_space,
-                "baseline_input_space": args.baseline_input_space,
-                "prc_similarity": args.prc_similarity,
-                "prc_use_sparse": prc_use_sparse,
-                "tune_baselines": tune_baselines,
-                "prc_noise_last": noise_last,
-                "prc_policy": {
-                    "recurse_tilo": bool(args.prc_recurse_tilo),
-                    "reverse_order_on_split": bool(args.reverse_order_on_split),
-                    "return_recursive_order": bool(args.prc_return_recursive_order),
-                    "refine_tilo": bool(args.prc_refine_tilo),
+        if args.sweep_vote_protocols:
+            print("Running Vote protocol sweep...")
+            vote_sweep = run_vote_protocol_sweep(
+                args=args,
+                prc_policy_template=prc_policy_template,
+                prc_noise_last=noise_last,
+                tune_baselines=tune_baselines,
+                prc_use_sparse=prc_use_sparse,
+            )
+            diagnostics_payload = {
+                "mode": "vote-protocol-sweep",
+                "config": {
+                    "seed": args.seed,
+                    "vote_k": args.vote_k,
+                    "baseline_input_space": args.baseline_input_space,
+                    "prc_use_sparse": prc_use_sparse,
+                    "tune_baselines": tune_baselines,
+                    "prc_noise_last": noise_last,
+                    "preserve_init_effect_for_baseline_init": bool(args.preserve_init_effect_for_baseline_init),
+                    "try_label_permutations_for_seeded_baselines": try_label_permutations,
+                    "max_label_permutation_labels": int(args.max_label_permutation_labels),
+                    "note": "paper_profile does not uniquely determine Vote missing-value handling.",
                 },
-                "vote_missing_strategy": args.vote_missing_strategy,
-                "paper_profile": bool(args.paper_profile),
-            },
-            "iris": {
-                "results": iris_results,
-                "paper_reference": PAPER_IRIS_ARI,
-                "paper_delta": calc_delta_to_paper(iris_results, PAPER_IRIS_ARI),
-                "details": iris_details,
-            },
-            "vote": {
-                "results": vote_results,
-                "paper_reference": PAPER_VOTE_ARI,
-                "paper_delta": calc_delta_to_paper(vote_results, PAPER_VOTE_ARI),
-                "details": vote_details,
-            },
-            "paper_reference_note": PAPER_REFERENCE_NOTE,
-        }
+                "vote_sweep": vote_sweep,
+                "paper_reference_note": PAPER_REFERENCE_NOTE,
+                "paper_reference_vote": PAPER_VOTE_ARI,
+            }
+            args.no_plot = True
+            iris_results = PAPER_IRIS_ARI
+            vote_results = PAPER_VOTE_ARI
+        else:
+            print(
+                f"Running Iris (n_trials={args.n_trials}, prc_input={args.prc_input_space}, "
+                f"baseline_input={args.baseline_input_space}, prc_similarity={args.prc_similarity}, "
+                f"prc_sparse={prc_use_sparse}, tune_baselines={tune_baselines})..."
+            )
+            iris_results, iris_details = run_all_methods(
+                args.iris_data,
+                args.iris_k,
+                args.seed,
+                args.iris_dbscan_eps,
+                args.iris_dbscan_min_samples,
+                n_trials=args.n_trials,
+                dataset_name="iris",
+                use_standardized_for_prc=use_std_for_prc,
+                baseline_input_space=args.baseline_input_space,
+                prc_similarity=args.prc_similarity,
+                prc_use_sparse=prc_use_sparse,
+                tune_baselines=tune_baselines,
+                prc_policy_template=prc_policy_template,
+                prc_noise_last=noise_last,
+                preserve_init_effect_for_baseline_init=bool(args.preserve_init_effect_for_baseline_init),
+                try_label_permutations_for_seeded_baselines=try_label_permutations,
+                max_label_permutation_labels=int(args.max_label_permutation_labels),
+            )
+            print("Iris ARI results:")
+            for k, v in iris_results.items():
+                print(f"  {k:<25} ARI={v:.4f}")
+
+            print(
+                f"\nRunning Vote (n_trials={args.n_trials}, prc_input={args.prc_input_space}, "
+                f"baseline_input={args.baseline_input_space}, prc_similarity={args.prc_similarity}, "
+                f"prc_sparse={prc_use_sparse}, tune_baselines={tune_baselines})..."
+            )
+            vote_results, vote_details = run_all_methods(
+                args.vote_data,
+                args.vote_k,
+                args.seed,
+                args.vote_dbscan_eps,
+                args.vote_dbscan_min_samples,
+                n_trials=args.n_trials,
+                dataset_name="vote",
+                use_standardized_for_prc=use_std_for_prc,
+                baseline_input_space=args.baseline_input_space,
+                prc_similarity=args.prc_similarity,
+                prc_use_sparse=prc_use_sparse,
+                tune_baselines=tune_baselines,
+                prc_policy_template=prc_policy_template,
+                prc_noise_last=noise_last,
+                vote_missing_strategy=args.vote_missing_strategy,
+                preserve_init_effect_for_baseline_init=bool(args.preserve_init_effect_for_baseline_init),
+                try_label_permutations_for_seeded_baselines=try_label_permutations,
+                max_label_permutation_labels=int(args.max_label_permutation_labels),
+            )
+            print("Vote ARI results:")
+            for k, v in vote_results.items():
+                print(f"  {k:<25} ARI={v:.4f}")
+
+            diagnostics_payload = {
+                "mode": "experiment",
+                "config": {
+                    "n_trials": args.n_trials,
+                    "vote_data": str(args.vote_data),
+                    "prc_input_space": args.prc_input_space,
+                    "baseline_input_space": args.baseline_input_space,
+                    "prc_similarity": args.prc_similarity,
+                    "prc_use_sparse": prc_use_sparse,
+                    "tune_baselines": tune_baselines,
+                    "prc_noise_last": noise_last,
+                    "preserve_init_effect_for_baseline_init": bool(args.preserve_init_effect_for_baseline_init),
+                    "try_label_permutations_for_seeded_baselines": try_label_permutations,
+                    "max_label_permutation_labels": int(args.max_label_permutation_labels),
+                    "prc_policy": {
+                        "recurse_tilo": bool(args.prc_recurse_tilo),
+                        "reverse_order_on_split": bool(args.reverse_order_on_split),
+                        "return_recursive_order": bool(args.prc_return_recursive_order),
+                        "refine_tilo": bool(args.prc_refine_tilo),
+                    },
+                    "vote_missing_strategy": args.vote_missing_strategy,
+                    "paper_profile": bool(args.paper_profile),
+                    "note": f"This figure uses best-of-n_trials selection (n_trials={args.n_trials}).",
+                },
+                "iris": {
+                    "results": iris_results,
+                    "paper_reference": PAPER_IRIS_ARI,
+                    "paper_delta": calc_delta_to_paper(iris_results, PAPER_IRIS_ARI),
+                    "details": iris_details,
+                },
+                "vote": {
+                    "results": vote_results,
+                    "paper_reference": PAPER_VOTE_ARI,
+                    "paper_delta": calc_delta_to_paper(vote_results, PAPER_VOTE_ARI),
+                    "details": vote_details,
+                },
+                "paper_reference_note": PAPER_REFERENCE_NOTE,
+            }
 
     if args.no_plot:
         print("\nSkipping figure generation (--no-plot).")
@@ -1351,3 +1568,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
