@@ -1,0 +1,91 @@
+{
+  "seed": 42,
+  "n_samples": 150,
+  "knn_k_used": 6,
+  "target_k": 6,
+  "generated_loops": 5,
+  "frames": [
+    "outputs\\iris_tilo_split_progress\\loop_01_k2.png",
+    "outputs\\iris_tilo_split_progress\\loop_02_k3.png",
+    "outputs\\iris_tilo_split_progress\\loop_03_k4.png",
+    "outputs\\iris_tilo_split_progress\\loop_04_k5.png",
+    "outputs\\iris_tilo_split_progress\\loop_05_k6.png"
+  ],
+  "history": [
+    {
+      "loop": 1,
+      "before_clusters": 1,
+      "after_clusters": 2,
+      "frame": "outputs\\iris_tilo_split_progress\\loop_01_k2.png",
+      "split_cluster_size": 150,
+      "split_quality": 0.2765820855098123,
+      "split_loc": 82,
+      "left_size": 83,
+      "right_size": 67,
+      "left_quality": 0.3911768941323276,
+      "right_quality": 0.42642630664464637,
+      "left_loc": 27,
+      "right_loc": 51
+    },
+    {
+      "loop": 2,
+      "before_clusters": 2,
+      "after_clusters": 3,
+      "frame": "outputs\\iris_tilo_split_progress\\loop_02_k3.png",
+      "split_cluster_size": 83,
+      "split_quality": 0.3911768941323276,
+      "split_loc": 27,
+      "left_size": 28,
+      "right_size": 55,
+      "left_quality": 0.798173822973263,
+      "right_quality": 0.8272583403535057,
+      "left_loc": 3,
+      "right_loc": 9
+    },
+    {
+      "loop": 3,
+      "before_clusters": 3,
+      "after_clusters": 4,
+      "frame": "outputs\\iris_tilo_split_progress\\loop_03_k4.png",
+      "split_cluster_size": 67,
+      "split_quality": 0.42642630664464637,
+      "split_loc": 51,
+      "left_size": 52,
+      "right_size": 15,
+      "left_quality": 0.743328591766302,
+      "right_quality": 0.9716969700056074,
+      "left_loc": 25,
+      "right_loc": 4
+    },
+    {
+      "loop": 4,
+      "before_clusters": 4,
+      "after_clusters": 5,
+      "frame": "outputs\\iris_tilo_split_progress\\loop_04_k5.png",
+      "split_cluster_size": 52,
+      "split_quality": 0.743328591766302,
+      "split_loc": 25,
+      "left_size": 26,
+      "right_size": 26,
+      "left_quality": 0.8934531485595442,
+      "right_quality": 0.9015109822517522,
+      "left_loc": 7,
+      "right_loc": 14
+    },
+    {
+      "loop": 5,
+      "before_clusters": 5,
+      "after_clusters": 6,
+      "frame": "outputs\\iris_tilo_split_progress\\loop_05_k6.png",
+      "split_cluster_size": 28,
+      "split_quality": 0.798173822973263,
+      "split_loc": 3,
+      "left_size": 4,
+      "right_size": 24,
+      "left_quality": null,
+      "right_quality": 0.9662626159899071,
+      "left_loc": -1,
+      "right_loc": 16
+    }
+  ]
+}

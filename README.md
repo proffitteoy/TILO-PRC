@@ -45,6 +45,19 @@ python experiments/compare_iris_prc_baselines.py --data tests/iris_all.txt --see
 - 脚本默认可运行 `PRC + K-Means + DBSCAN`（仅依赖 `numpy` 与本仓库 `pyprc`）。
 - 若环境中已安装 `hdbscan` 或 `sklearn.cluster.HDBSCAN`，会自动纳入 HDBSCAN 对比。
 
+### 论文图复现实验（Iris + Vote）
+
+```bash
+python experiments/reproduce_paper_fig_ari.py --paper-profile
+```
+
+说明：
+
+- `--paper-profile` 会启用当前仓库中已确认的历史 C++/论文风格 PRC 配置：`raw + gauss + sparse + recurse/refine`。
+- `Vote` 默认读取仓库根目录 `house-votes-84.data`，并按论文说明默认使用 `--vote-missing-strategy drop_rows`（删除含缺失属性的样本）。
+- 如需对照旧实验，也可切换 `--vote-missing-strategy` 为 `half`、`zero`、`one` 或 `column_mode`。
+- 该脚本会把本次运行实际使用的 PRC policy 和 `Vote` 缺失值处理策略写入诊断 JSON，便于对照论文结果排查差异。
+
 ### Iris + TILO 一次循环切分可视化
 
 ```bash

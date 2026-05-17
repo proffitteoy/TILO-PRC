@@ -1,0 +1,65 @@
+{
+  "verdict": "不能在当前工作区里用提供的旧版源码完整复现论文图。旧版 Python 扩展说明明确不支持 Python 3；旧版 C++ CLI 也因缺少 Eigen 头文件而无法完成构建。",
+  "legacy_source": {
+    "source_dir": "F:\\prc_v1_d2026_04_24\\prc_v0.1.05 (1)\\prc_v0.1.05_d2013_04_30",
+    "configure_log": "F:\\prc_v1_d2026_04_24\\test\\legacy_prc_outputs\\legacy_cmake_configure.log",
+    "build_log": "F:\\prc_v1_d2026_04_24\\test\\legacy_prc_outputs\\legacy_cmake_build.log",
+    "python3_incompatible_note": "old pythonExt/readme.rst states: Currently, the extension does not build with python3.",
+    "missing_dependency": "Eigen/Core",
+    "testdata_gap": "tests/test_iris.sh references ../../testData/randOrder_150 and ../../testData/linOrder_150, but the provided source tree does not contain a sibling testData directory."
+  },
+  "current_pyprc_reference": {
+    "source_file": "F:\\prc_v1_d2026_04_24\\experiments\\output\\paper_fig_ari_diagnostics.json",
+    "copied_file": "F:\\prc_v1_d2026_04_24\\test\\legacy_prc_outputs\\current_pyprc_paper_fig_diagnostics.json",
+    "rerun_in_this_attempt": false,
+    "reason_not_rerun": "Local Python execution hit desktop sandbox approval timeout during this attempt, so the existing diagnostics were copied as reference.",
+    "iris_top_deltas": [
+      {
+        "method": "TILO-PRC(K Means)",
+        "result": 0.5187598278284823,
+        "paper_delta": -0.24124
+      },
+      {
+        "method": "Spectral",
+        "result": 0.7591987071071522,
+        "paper_delta": 0.229199
+      },
+      {
+        "method": "TILO-PRC(Spectral)",
+        "result": 0.7073626391173136,
+        "paper_delta": -0.182637
+      },
+      {
+        "method": "Aff. Prop.",
+        "result": 0.5988233855933499,
+        "paper_delta": 0.408823
+      }
+    ],
+    "vote_top_deltas": [
+      {
+        "method": "Aff. Prop.",
+        "result": 0.12269409087150762,
+        "paper_delta": 0.082694
+      },
+      {
+        "method": "DBScan",
+        "result": -0.010921395915084313,
+        "paper_delta": -0.080921
+      },
+      {
+        "method": "Spectral",
+        "result": 0.5571969240590804,
+        "paper_delta": -0.042803
+      },
+      {
+        "method": "K Means",
+        "result": 0.5850184939312345,
+        "paper_delta": -0.024982
+      }
+    ]
+  },
+  "artifacts": {
+    "reference_figure": "F:\\prc_v1_d2026_04_24\\test\\legacy_prc_outputs\\current_pyprc_paper_fig.png",
+    "automation_script": "F:\\prc_v1_d2026_04_24\\test\\run_legacy_prc_repro.py"
+  }
+}

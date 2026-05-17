@@ -12,7 +12,7 @@ import numpy as np
 from .enums import FlatStruct, FlatType, PRCError, PrcMetricEnum, PrintMarks
 from .matrix import BoundaryObject, MatrixStorage, _to_square_numpy_matrix
 from .order import OrderObject, VirtualOrderObject
-from .rng import _GLOBAL_C_RAND, _cpp_shuffle_values
+from .rng import _GLOBAL_C_RAND, _cpp_random_shuffle
 from .structs import (
     PrcCountsStruct,
     PrcMetricValues,
@@ -589,7 +589,7 @@ def pinchRatioClustering(
     else:
         values = list(int(x) for x in list(order_like))
         if len(values) == 0:
-            values = _cpp_shuffle_values(range(n), _GLOBAL_C_RAND.rand())
+            values = _cpp_random_shuffle(range(n), _GLOBAL_C_RAND.rand)
         order = OrderObject(data=values)
     result, labels = pinchRatioClustering_storage(matrix, order, k, policy)
     _copy_order_back(order_like, order)
@@ -619,7 +619,7 @@ def _validate_order_vector(order_vec: Sequence[int], n: int) -> None:
 
 
 def initOrder_random(n: int) -> OrderObject:
-    return OrderObject(data=_cpp_shuffle_values(range(n), _GLOBAL_C_RAND.rand()))
+    return OrderObject(data=_cpp_random_shuffle(range(n), _GLOBAL_C_RAND.rand))
 
 
 def initOrder_from_files(

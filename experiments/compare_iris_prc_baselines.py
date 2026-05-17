@@ -12,10 +12,15 @@ import argparse
 import csv
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 import pyprc
 
@@ -220,15 +225,23 @@ def run_prc(
     seed: int,
     num_init_orderings: int,
     metric: pyprc.PrcMetricEnum,
+    prc_similarity: str = "gauss",
+    prc_use_sparse: bool = True,
 ) -> np.ndarray:
     run_config = pyprc.RunConfigStruct(seed=seed, verboseLevel=0, numberOfPartitions=num_partitions)
+    if prc_similarity == "knn":
+        sim_type = pyprc.PointSimilarityEnum.KNN_ADJ_SIM
+    elif prc_similarity == "gauss":
+        sim_type = pyprc.PointSimilarityEnum.GAUSS_ADJ_SIM
+    else:
+        raise ValueError(f"unknown PRC similarity: {prc_similarity}")
     data_config = pyprc.DataConfigStruct(
         inputFileName=str(data_file),
         fileType=pyprc.FileStructureEnum.POINT_DATA,
-        useSparseMatrix=False,
+        useSparseMatrix=prc_use_sparse,
         pointDataConfig=pyprc.PointDataConfigStruct(
             tagLoc=pyprc.TagModeEnum.FRONT_TAGS,
-            simType=pyprc.PointSimilarityEnum.KNN_ADJ_SIM,
+            simType=sim_type,
         ),
     )
     knn_policy = pyprc.KnnAdjPolicyStruct(
@@ -439,6 +452,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--numpart", type=int, default=3)
     parser.add_argument("--prc-runs", type=int, default=10)
+    parser.add_argument(
+        "--baseline-input-space",
+        choices=["raw", "standardized"],
+        default="raw",
+        help="Feature space used by baselines (default: raw, closer to C++ paper settings)",
+    )
+    parser.add_argument(
+        "--prc-similarity",
+        choices=["gauss", "knn"],
+        default="gauss",
+        help="PRC graph similarity type (C++ default: gauss)",
+    )
+    parser.add_argument(
+        "--prc-dense",
+        action="store_true",
+        help="Use dense matrix for PRC (default: sparse)",
+    )
     parser.add_argument("--kmeans-runs", type=int, default=20)
     parser.add_argument("--kmeans-max-iter", type=int, default=300)
     parser.add_argument("--dbscan-eps", type=float, default=0.75)
@@ -456,7 +486,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     x_raw, y_true = load_iris_from_file(args.data)
-    x = standardize_features(x_raw)
+    x = standardize_features(x_raw) if args.baseline_input_space == "standardized" else x_raw
 
     rows: List[Dict[str, object]] = []
 
@@ -466,6 +496,8 @@ def main() -> int:
         seed=args.seed,
         num_init_orderings=args.prc_runs,
         metric=pyprc.PrcMetricEnum.PinchRatio,
+        prc_similarity=args.prc_similarity,
+        prc_use_sparse=(not args.prc_dense),
     )
     rows.append(summarize_result("PRC(PinchRatio)", labels_prc_pr, y_true))
 
@@ -475,6 +507,8 @@ def main() -> int:
         seed=args.seed,
         num_init_orderings=args.prc_runs,
         metric=pyprc.PrcMetricEnum.NCut,
+        prc_similarity=args.prc_similarity,
+        prc_use_sparse=(not args.prc_dense),
     )
     rows.append(summarize_result("PRC(NCut)", labels_prc_ncut, y_true))
 
@@ -513,6 +547,9 @@ def main() -> int:
         "params": {
             "numpart": args.numpart,
             "prc_runs": args.prc_runs,
+            "baseline_input_space": args.baseline_input_space,
+            "prc_similarity": args.prc_similarity,
+            "prc_use_sparse": (not args.prc_dense),
             "kmeans_runs": args.kmeans_runs,
             "kmeans_max_iter": args.kmeans_max_iter,
             "dbscan_eps": args.dbscan_eps,

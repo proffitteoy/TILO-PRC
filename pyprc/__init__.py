@@ -26,7 +26,7 @@ from .structs import (
     RunConfigStruct,
     TiloPolicyStruct,
 )
-from .rng import _GLOBAL_C_RAND, _cpp_shuffle_values
+from .rng import _GLOBAL_C_RAND, _cpp_random_shuffle, _cpp_shuffle_values
 from .matrix import (
     BoundaryObject,
     MatrixStorage,

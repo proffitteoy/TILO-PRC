@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.8.1: http://docutils.sourceforge.net/" />
+<title>Pinch Ratio Clustering from a Topologically Intrinsic Lexicographic Ordering</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7056 2011-06-17 10:50:48Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="pinch-ratio-clustering-from-a-topologically-intrinsic-lexicographic-ordering">
+<h1 class="title">Pinch Ratio Clustering from a Topologically Intrinsic Lexicographic Ordering</h1>
+
+<p>If you use the software in a scientific publication, please acknowledge with a citation to
+<strong>Pinch Ratio Clustering from a Topologically Intrinsic Lexicographic Ordering</strong>,
+<em>Proceedings of the SIAM International Conference on Data Mining (ICDM 2013)</em>, May 2-4, 2013.
+Available at <a class="reference external" href="http://www.cs.okstate.edu/~doug/publications/prc_sdm13.pdf">prc_sdm13.pdf</a>.</p>
+<p>The source code is available using GNU General Public License version 3, see
+<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>. If you
+need to use the code under a different license, contact the author.</p>
+<div class="section" id="building-prc-code">
+<h1>Building PRC code</h1>
+<p>Code dependencies for prc include cmake for building, eigen for matrices, and a
+reasonably new c++ compilier. The python binding require numpy and scipy.</p>
+<p>Build outside of the source code directories.  For example,
+with source code in <tt class="docutils literal">~/src/prc</tt>, create a new directory
+for the build at ~/build/prc.  cd into <tt class="docutils literal">~/build/prc</tt>.  Then run</p>
+<p><tt class="docutils literal">cmake ~/src/prc</tt></p>
+<p>which will create the make files in linux.  Then use make to build.</p>
+<p><tt class="docutils literal">make</tt></p>
+<p>If Eigen is not in your default path, say you installed it in your home directory then
+also pass that prefix to cmake:</p>
+<p><tt class="docutils literal">cmake . <span class="pre">-DCMAKE_INSTALL_PREFIX=${HOME}</span>&nbsp; <span class="pre">${HOME}/src/prc</span></tt></p>
+<p>and the include directories in the prefix path will also be searched.  Or
+pass in the actual directory location.  Example on MS windows.</p>
+<p><tt class="docutils literal">cmake . <span class="pre">-DCMAKE_INCLUDE_PATH=C:\Users\Doug\Documents\Working\eigen</span>&nbsp; <span class="pre">..\prc</span></tt></p>
+<p>To create visual studio 11 win64 project files, add cmake option
+<tt class="docutils literal"><span class="pre">-G</span> &quot;Visual Studio 11 Win64&quot;</tt>
+or for nmake files:
+<tt class="docutils literal"><span class="pre">-G</span> &quot;NMake Makefiles&quot;</tt>.</p>
+<div class="line-block">
+<div class="line">Other options</div>
+<div class="line-block">
+<div class="line"><tt class="docutils literal"><span class="pre">-DCMAKE_BUILD_TYPE=Debug</span></tt></div>
+<div class="line"><tt class="docutils literal"><span class="pre">-DCMAKE_BUILD_TYPE=Release</span></tt></div>
+<div class="line"><tt class="docutils literal"><span class="pre">-DVERBOSE_PINCH=level</span></tt>   : where level is integer corresponding to amount of output</div>
+<div class="line"><tt class="docutils literal"><span class="pre">-DPINCH_VERIFY_LEX=1</span></tt>   : verifies that the width is reduced each iteration of TILO</div>
+<div class="line"><tt class="docutils literal"><span class="pre">-DHAVE_BENCH=path</span></tt>      : times execution using eigen's benchmark timer, typically in eigen/bench</div>
+<div class="line"><tt class="docutils literal"><span class="pre">-Wdev</span></tt>  or <tt class="docutils literal"><span class="pre">-Wno-dev</span></tt>  : enable/disable developer warnings</div>
+</div>
+</div>
+<p>Build with
+<tt class="docutils literal">make VERBOSE=1</tt>
+for verbose compiler output</p>
+<div class="section" id="building-python-and-prcvis-code">
+<h2>Building Python and prcVis Code</h2>
+<p>see description in the individual directories.  Eventual build
+system will be migrated to cmake.  But for now, python and qmake
+are being used.</p>
+</div>
+<div class="section" id="cross-compiling-to-ms-windows-using-mingw">
+<h2>Cross compiling to MS Windows using mingw</h2>
+<p>Create toolchain file and store in <tt class="docutils literal"><span class="pre">~/cmake/toolchain-minw32.cmake</span></tt>
+where the toolchain-minw32.cmake would contains (on debian wheezy):</p>
+<pre class="literal-block">
+# the name of the target operating system
+SET(CMAKE_SYSTEM_NAME Windows)
+# which compilers to use for C and C++
+SET(CMAKE_C_COMPILER i586-mingw32msvc-gcc)
+SET(CMAKE_CXX_COMPILER i586-mingw32msvc-g++)
+SET(CMAKE_RC_COMPILER i586-mingw32msvc-windres)
+# here is the target environment located
+SET(CMAKE_FIND_ROOT_PATH  /usr/i586-mingw32msvc /home/drh/mingw-32 )
+# adjust the default behaviour of the FIND_XXX() commands:
+# search headers and libraries in the target environment, search
+# programs in the host environment
+SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+</pre>
+<p>and  <tt class="docutils literal"><span class="pre">~/cmake/toolchain-minw64.cmake</span></tt> where the
+toolchain-minw64.cmake would contains (on debian wheezy):</p>
+<pre class="literal-block">
+# the name of the target operating system
+SET(CMAKE_SYSTEM_NAME Windows)
+# which compilers to use for C and C++
+SET(CMAKE_C_COMPILER amd64-mingw32msvc-gcc)
+SET(CMAKE_CXX_COMPILER amd64-mingw32msvc-g++)
+SET(CMAKE_RC_COMPILER amd64-mingw32msvc-windres)
+# here is the target environment located
+SET(CMAKE_FIND_ROOT_PATH  /usr/amd64-mingw32msvc /home/drh/mingw-64 )
+# adjust the default behaviour of the FIND_XXX() commands:
+# search headers and libraries in the target environment, search
+# programs in the host environment
+SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+</pre>
+<div class="line-block">
+<div class="line">then when running cmake add:</div>
+<div class="line"><tt class="docutils literal"><span class="pre">-DCMAKE_TOOLCHAIN_FILE=~/cmake/toolchain-minw32.cmake</span></tt></div>
+<div class="line">or</div>
+<div class="line"><tt class="docutils literal"><span class="pre">-DCMAKE_TOOLCHAIN_FILE=~/cmake/toolchain-minw64.cmake</span></tt></div>
+</div>
+</div>
+</div>
+<div class="section" id="commandline-programs">
+<h1>Commandline programs</h1>
+<div class="section" id="pinchratioclustering">
+<h2>pinchRatioClustering</h2>
+<p>The main driver program that reads a data file and attempts to determine
+clusters.  The executable is found in the prc directory of the build location.</p>
+<p>usage: pinchRatioClustering [long options]  [filename [numberOfPartitions]]</p>
+<p>will read data file <tt class="docutils literal">filename</tt> and attempt to find <tt class="docutils literal">numberOfPartitions</tt> clusters.
+Possible long options include</p>
+<blockquote>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--dataInput <var>string</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Data file name.  The data file name be point data or and adjacency graph.
+May also be passed as a non-option.  That is, the first command line
+parameter without the <tt class="docutils literal"><span class="pre">--</span></tt> is assumed to be the data file name.
+The structure of the data file is specified with the <tt class="docutils literal">fileType</tt> option.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--fileType <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specifies the data file type. 0 mean a point data file. 1 mean an adjacency matrix file.
+Point data files expect one data point per line.  The adjacency matrix file expects
+a sparse matrix format.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--pointSimilarity <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Specifies the similarity measure type to use for point data files.</p>
+<ul class="last simple">
+<li>1 -&gt; Gaussian similarity and</li>
+<li>2 -&gt; K nearest neighbor similarity.</li>
+</ul>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--seed <var>long</var></span></kbd></td>
+<td>Set the seed of the random number generator. Use 0 to set from current time.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--numpart <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Number of partitions to find. Must be &gt;= 2.  May also be pass
+as an option after the filename.   The program will find at most this
+number of clusters, but it may find less.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--verbose <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Higher values generate more output.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--saveLabels <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if the partition labels are saved to file.
+Labels are in the same order as the data file.  The label file name is
+the data filename + outputLabelSuffix + numParts + infoSuffux [+ seed].</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--saveOrder <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if the TILO order and boundary are saved to file.  The order file name is
+the data filename + outputOrderSuffix + numParts + infoSuffux [+ seed].</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--seedSuffixFlag <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if the seed value is added to output file names.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--outputLabelSuffix <var>string</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Text to add to saved label file name.  Default is <tt class="docutils literal">&quot;_part_&quot;</tt></td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--outputOrderSuffix <var>string</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Text to add to saved order file name.  Default is <tt class="docutils literal">&quot;_tilo_&quot;</tt></td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--infoSuffix <var>string</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Extra text to attached before seed in output file names.  Default is empty string.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--initOrderFile <var>string</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Name of file containing an initial linear order to use instead of random order.
+Expects zero based indexing with whitespace separated integers.  If this option
+or the <tt class="docutils literal">initLabelsFile</tt> option is not given then TILO will start with a random
+shuffle of the data point order.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--initLabelsFile <var>string</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Name of file containing an initial labels to use instead of random order.
+Expects the labels to be in the same format as the saveLabels file.  That is,
+one label per line in the same order as the datafile.  An initial order
+is created by placing placing points with the same label adjacent to each other.
+Can be used to start TILO with an ordering generated by another algorithm.
+If this option or the <tt class="docutils literal">initOrderFile</tt> option is not given then
+TILO will start with a random shuffle of the data point order.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--numInitOrderings <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Number of times to run PRC with random initial orders
+and return the one with the best total width.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--saveMultipleRuns <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Save partition labels of each PRC run in addition to the best run. The number of
+multiple runs is set with the <tt class="docutils literal">numInitOrderings</tt> option.  The tags <tt class="docutils literal">&quot;_multirun_labels&quot;</tt>
+and <tt class="docutils literal">&quot;_multirun_info&quot;</tt> are added to the label and order files names.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--useSparseMatrix <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if PRC should store the adjacency matrix in a sparse matrix. Default is true.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--commaSeparated <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to indicate if the data file is comma delimited.  Default is false.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--adjNodeOffset <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Node index offset in an adjacency matrix data file. Default is 1.
+Needed when data file starts with one based instead of zero based indexing.
+Many of the example adjacency graphs on the web use one based indexing.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--tiloMaxIteration</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>long    Limit on the maximum number of iterations that TILO will run.  Default is 10,000,000.
+Typically never reached.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--tiloEpsilon <var>double</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Floating point precision value. Used when comparing the value of a shift to zero.  That
+is, the shift value must be &gt; tiloEpsilon instead of &gt; zero.  Also used to generate
+a combination of relative and absolute error of a value <em>v</em> by using (1+tiloEpsilon) * <em>v</em>.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--policyPRCRecurseTILO <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if TILO is reran on a partition after is is moved to the front of
+the linear order.  This controls whether lines 13 and 14 of the PRC algorithm are
+used.  Default is false.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--policyReverseOrderOnSplit <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if the order of a partition is reversed when it is moved to the front.
+This option is only used if <tt class="docutils literal">policyPRCRecurseTILO</tt> is true.  Default is false.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--policyReturnRecursiveOrder <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if the order created by the recursive use of TILO is returned
+or if the order from the initial TILO is returned.
+This option is only used if <tt class="docutils literal">policyPRCRecurseTILO</tt> is true.  Default is false.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--policyPRCMetric <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><dl class="first docutils">
+<dt>The metric to use to evaluate split locations.  Possible values are</dt>
+<dd><ul class="first last simple">
+<li>0 -&gt; PinchRatio,</li>
+<li>1 -&gt; RelRatio,</li>
+<li>2 -&gt; CrossRatio, and</li>
+<li>3 -&gt; NCut.</li>
+</ul>
+</dd>
+</dl>
+<p class="last">Default is 0 for pinch ratio.  NCut refers to normalized cut and is well tested.
+The RelRatio and CrossRatio are experimental and are not well tested.</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--policyRefineTILO <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control if the boundary is complete reduced or if TILO stops as soon as the
+local max and mins are set.  Typically used when conducting multiple runs on random initial
+orders and the best run is selected by the best total width.  Default is false.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--policyEvalAllMetrics <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control the evaluation of cluster metrics.  Typically, only the metric
+that is being used to find split locations is evaluated.  If this option is true
+then all of the metrics are evaluated and returned.  The split locations are
+still determined by <tt class="docutils literal">policyPRCMetric</tt> option.  Default is false.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--policyReturnMetrics <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Flag to control is the metric values are all split locations are returned in an array.
+This extra information will be stored in the boundary and order output file.
+Default is false.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--knnAdjMode <var>int</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><dl class="first docutils">
+<dt>The type of K nearest neighbor similarity to use for point data.</dt>
+<dd><ul class="first last simple">
+<li>0 -&gt; KNN_EITHER_ADJ_ONE, a value of 1.0 if either point is in the KNN of each other.</li>
+<li>1 -&gt; KNN_BOTH_ADJ_ONE, a value of 1.0 only if both points are in the KNN of each other.</li>
+<li>2 -&gt; KNN_BOTH_EITHER_ONE_ONEHALF, a value of 1.0 only of both points are in the KNN of each other,
+a value of 1/2 if one point is in the KNN of the other point.</li>
+<li>3 -&gt; KNN_EITHER_ADJ_GAUSS, if either point is in the KNN of the other then the value of Gaussian
+similarity of the two points is used.</li>
+</ul>
+</dd>
+</dl>
+<p class="last">The default is 3.</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--knnAdjK <var>int</var></span></kbd></td>
+<td>Number of nearest neighbors to use for KNN similarity mode. Use a value of -1 for the heuristic value of log(n)+1,
+where n is the number of data points.   Default is -1.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--knnAdjSigma <var>double</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The value of sigma in knn's Gaussian similarity (i.e., mode 3 of <tt class="docutils literal">knnAdjMode</tt>).
+Use -1 to estimate from average knn distance. Default is -1.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--gausssimAdjMode <var>int</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><dl class="first docutils">
+<dt>The type of Gaussian similarity to use for point data.</dt>
+<dd><ul class="first last simple">
+<li>0 -&gt; GS_ADJ_THRESHOLD, any Gaussian similarity values less than the threshold are set to zero.</li>
+<li>1 -&gt; GS_ADJ_ALL,  the value of the similarity is the Gaussian similarity of the
+two points.  With points <strong>a</strong> and <strong>b</strong>, then the similarity is
+exp(-1.0 (a-b)^T (a-b) /( sigma^2)).</li>
+</ul>
+</dd>
+</dl>
+<p class="last">The default is 1.</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--gausssimAdjSigma <var>double</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The value of sigma in the Gaussian similarity.  Use -1 for heuristic
+to calculate from average knn distance.  Default is -1.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--gausssimAdjThreshold <var>double</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>With <tt class="docutils literal">gausssimAdjMode</tt> of 0, values less than this threshold are set to zero. Default is 1e-10.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--commentDelimiter <var>string</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The charactoer representing the start of a comment in a data file.  Comments are ignored. Default is <tt class="docutils literal">#</tt></td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--tagLoc <var>integer</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><dl class="first docutils">
+<dt>Location of class labels in a data file.</dt>
+<dd><ul class="first last simple">
+<li>0 -&gt;   no class tags,</li>
+<li>1 -&gt;   front location.  Class label is first value in the line of data.</li>
+<li>-1 -&gt;  tail location.   Class label is last value in the line of data.</li>
+</ul>
+</dd>
+</dl>
+<p class="last">Default is 0, no class labels.  Class labels are not used in clustering but
+if available then purity and other performance measures of the clustering can be reported.</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--useTransduction <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Not implemented yet.  Value is ignored.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--useMultiLevelPRC <var>boolean</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Default false.  Multilevel is currently disabled as it is undergoing a rewrite.</td></tr>
+</tbody>
+</table>
+</blockquote>
+</div>
+<div class="section" id="gensimmatrix">
+<h2>genSimMatrix</h2>
+<p>A helper program that creates adjacency matrices from point data and saves to an output file.
+The main use is to save the adjacency matrix that pinchRatioClustering  would create
+for use in another algorithm.  The executable is found in the prc directory of the build location.</p>
+<p>usage: prc/genSimMatrix [long options]  [filename outputFileName]</p>
+<p>The options are the same as pinchRatioClustering, but most of them are ignored
+as the clustering algorithm is not conducted.</p>
+</div>
+</div>
+</div>
+</body>
+</html>

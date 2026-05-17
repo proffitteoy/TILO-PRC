@@ -1,0 +1,4 @@
+# add config data here.
+[build_ext]
+include_dirs=/LocalInstall/include/eigen3
+#libraries = rt

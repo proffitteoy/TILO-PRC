@@ -1,0 +1,45 @@
+{
+  "boundary": [
+    2.0,
+    4.0,
+    7.0,
+    10.0,
+    7.0,
+    4.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    4.0,
+    7.0,
+    10.0,
+    7.0,
+    4.0,
+    2.0
+  ],
+  "split_loc": 6,
+  "split_flat_start": 6,
+  "split_flat_stop": 13,
+  "pinch_ratio": 0.2,
+  "marks": [
+    {
+      "start": 3,
+      "stop": 3,
+      "type": "max"
+    },
+    {
+      "start": 6,
+      "stop": 13,
+      "type": "min"
+    },
+    {
+      "start": 16,
+      "stop": 16,
+      "type": "max"
+    }
+  ]
+}

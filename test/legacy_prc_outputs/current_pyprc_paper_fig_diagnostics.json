@@ -1,0 +1,195 @@
+{
+  "mode": "experiment",
+  "config": {
+    "n_trials": 20,
+    "prc_input_space": "raw",
+    "baseline_input_space": "raw",
+    "prc_similarity": "gauss",
+    "prc_use_sparse": true,
+    "tune_baselines": false,
+    "prc_noise_last": false
+  },
+  "paper_reference_note": "Approximate ARI values digitized from the provided paper figure image and rounded to 2 decimals.",
+  "iris": {
+    "results": {
+      "TILO-NCUT": 0.7322981167185345,
+      "TILO-PRC": 0.9037675791580496,
+      "K Means": 0.7302382722834697,
+      "TILO-PRC(K Means)": 0.5187598278284823,
+      "Spectral": 0.7591987071071522,
+      "TILO-PRC(Spectral)": 0.7073626391173136,
+      "DBScan": 0.5637510205230709,
+      "TILO-PRC(DBScan)": 0.9037675791580496,
+      "Aff. Prop.": 0.5988233855933499,
+      "TILO-PRC(Aff. Prop.)": 0.9037675791580496,
+      "Mean Shift": 0.5583714437541352,
+      "TILO-PRC(Mean Shift)": 0.9037675791580496
+    },
+    "paper_reference": {
+      "TILO-NCUT": 0.62,
+      "TILO-PRC": 0.9,
+      "K Means": 0.73,
+      "TILO-PRC(K Means)": 0.9,
+      "Spectral": 0.79,
+      "TILO-PRC(Spectral)": 0.9,
+      "DBScan": 0.51,
+      "TILO-PRC(DBScan)": 0.9,
+      "Aff. Prop.": 0.54,
+      "TILO-PRC(Aff. Prop.)": 0.9,
+      "Mean Shift": 0.57,
+      "TILO-PRC(Mean Shift)": 0.9
+    },
+    "paper_delta": {
+      "Aff. Prop.": 0.058823,
+      "DBScan": 0.053751,
+      "K Means": 0.000238,
+      "Mean Shift": -0.011629,
+      "Spectral": -0.030801,
+      "TILO-NCUT": 0.112298,
+      "TILO-PRC": 0.003768,
+      "TILO-PRC(Aff. Prop.)": 0.003768,
+      "TILO-PRC(DBScan)": 0.003768,
+      "TILO-PRC(K Means)": -0.38124,
+      "TILO-PRC(Mean Shift)": 0.003768,
+      "TILO-PRC(Spectral)": -0.192637
+    },
+    "details": {
+      "baseline_params": {
+        "K Means": {
+          "n_clusters": 3,
+          "seed": 42,
+          "n_init": 20
+        },
+        "Spectral": {
+          "n_clusters": 3,
+          "seed": 42,
+          "affinity": "nearest_neighbors",
+          "n_neighbors": 10,
+          "gamma": 1.0,
+          "assign_labels": "kmeans"
+        },
+        "DBScan": {
+          "eps": 0.75,
+          "min_samples": 5
+        },
+        "Aff. Prop.": {
+          "seed": 42,
+          "damping": 0.9,
+          "preference": null
+        },
+        "Mean Shift": {
+          "bandwidth": null,
+          "quantile": 0.2,
+          "n_samples": 500,
+          "bin_seeding": false
+        }
+      },
+      "notes": [
+        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False"
+      ],
+      "tilo_trial_ari": {
+        "NCUT": {
+          "min": 0.447921,
+          "mean": 0.704572,
+          "max": 0.732298
+        },
+        "PRC": {
+          "min": 0.410074,
+          "mean": 0.793707,
+          "max": 0.903768
+        }
+      }
+    }
+  },
+  "vote": {
+    "results": {
+      "TILO-NCUT": 0.5778716452524679,
+      "TILO-PRC": 0.5778716452524679,
+      "K Means": 0.5850184939312345,
+      "TILO-PRC(K Means)": 0.5778716452524679,
+      "Spectral": 0.5571969240590804,
+      "TILO-PRC(Spectral)": 0.5778716452524679,
+      "DBScan": -0.010921395915084313,
+      "TILO-PRC(DBScan)": 0.5778716452524679,
+      "Aff. Prop.": 0.12269409087150762,
+      "TILO-PRC(Aff. Prop.)": 0.5778716452524679,
+      "Mean Shift": 0.592083030447583,
+      "TILO-PRC(Mean Shift)": 0.5778716452524679
+    },
+    "paper_reference": {
+      "TILO-NCUT": 0.52,
+      "TILO-PRC": 0.82,
+      "K Means": 0.54,
+      "TILO-PRC(K Means)": 0.82,
+      "Spectral": 0.69,
+      "TILO-PRC(Spectral)": 0.82,
+      "DBScan": 0.01,
+      "TILO-PRC(DBScan)": 0.82,
+      "Aff. Prop.": 0.09,
+      "TILO-PRC(Aff. Prop.)": 0.82,
+      "Mean Shift": 0.0,
+      "TILO-PRC(Mean Shift)": 0.82
+    },
+    "paper_delta": {
+      "Aff. Prop.": 0.032694,
+      "DBScan": -0.020921,
+      "K Means": 0.045018,
+      "Mean Shift": 0.592083,
+      "Spectral": -0.132803,
+      "TILO-NCUT": 0.057872,
+      "TILO-PRC": -0.242128,
+      "TILO-PRC(Aff. Prop.)": -0.242128,
+      "TILO-PRC(DBScan)": -0.242128,
+      "TILO-PRC(K Means)": -0.242128,
+      "TILO-PRC(Mean Shift)": -0.242128,
+      "TILO-PRC(Spectral)": -0.242128
+    },
+    "details": {
+      "baseline_params": {
+        "K Means": {
+          "n_clusters": 2,
+          "seed": 42,
+          "n_init": 20
+        },
+        "Spectral": {
+          "n_clusters": 2,
+          "seed": 42,
+          "affinity": "nearest_neighbors",
+          "n_neighbors": 10,
+          "gamma": 1.0,
+          "assign_labels": "kmeans"
+        },
+        "DBScan": {
+          "eps": 1.5,
+          "min_samples": 5
+        },
+        "Aff. Prop.": {
+          "seed": 42,
+          "damping": 0.9,
+          "preference": null
+        },
+        "Mean Shift": {
+          "bandwidth": null,
+          "quantile": 0.2,
+          "n_samples": 500,
+          "bin_seeding": false
+        }
+      },
+      "notes": [
+        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False"
+      ],
+      "tilo_trial_ari": {
+        "NCUT": {
+          "min": 0.577872,
+          "mean": 0.577872,
+          "max": 0.577872
+        },
+        "PRC": {
+          "min": 0.577872,
+          "mean": 0.577872,
+          "max": 0.577872
+        }
+      }
+    }
+  }
+}
