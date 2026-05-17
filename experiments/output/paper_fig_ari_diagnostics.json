@@ -9,14 +9,18 @@
     "prc_use_sparse": true,
     "tune_baselines": false,
     "prc_noise_last": false,
+    "preserve_init_effect_for_baseline_init": false,
+    "try_label_permutations_for_seeded_baselines": false,
+    "max_label_permutation_labels": 8,
     "prc_policy": {
-      "recurse_tilo": true,
-      "reverse_order_on_split": true,
-      "return_recursive_order": true,
-      "refine_tilo": true
+      "recurse_tilo": false,
+      "reverse_order_on_split": false,
+      "return_recursive_order": false,
+      "refine_tilo": false
     },
     "vote_missing_strategy": "drop_rows",
-    "paper_profile": true
+    "paper_profile": true,
+    "note": "This figure uses best-of-n_trials selection (n_trials=20)."
   },
   "iris": {
     "results": {
@@ -93,29 +97,48 @@
         }
       },
       "notes": [
-        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=False; vote_missing_strategy=n/a"
+        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=False; try_label_permutations_for_kmeans_spectral_dbscan=False; max_label_permutation_labels=8; tilo_selection_protocol=best_of_n_trials_with_pyprc.cless(n_trials=20); vote_missing_strategy=n/a"
       ],
       "tilo_trial_ari": {
         "NCUT": {
-          "min": 0.447921,
-          "mean": 0.704572,
-          "max": 0.732298
+          "min": 0.642251,
+          "mean": 0.731867,
+          "max": 0.903768
         },
         "PRC": {
-          "min": 0.410074,
-          "mean": 0.803527,
+          "min": 0.707363,
+          "mean": 0.864487,
           "max": 0.903768
         }
       },
       "prc_policy": {
-        "recurse_tilo": true,
-        "reverse_order_on_split": true,
-        "return_recursive_order": true,
-        "refine_tilo": true,
+        "recurse_tilo": false,
+        "reverse_order_on_split": false,
+        "return_recursive_order": false,
+        "refine_tilo": false,
         "eval_all_metrics": false,
         "return_metrics": false,
         "tilo_max_iterations": 10000000,
         "tilo_epsilon": 1e-12
+      },
+      "graph_params": {
+        "similarity": "gauss",
+        "use_sparse": true,
+        "gauss_sigma_input": -1.0,
+        "gauss_mode": "0",
+        "gauss_threshold": 1e-10,
+        "gauss_sigma_used": 0.4652430988002328
+      },
+      "graph_stats": {
+        "n": 150,
+        "nnz": 13958,
+        "density": 0.6203555555555555,
+        "degree_min": 1.4878090125994503,
+        "degree_mean": 15.517972785536843,
+        "degree_max": 28.889147348336994,
+        "edge_weight_min": 1.0185185836848937e-10,
+        "edge_weight_mean": 0.16676428699172705,
+        "edge_weight_max": 1.0
       }
     }
   },
@@ -194,7 +217,7 @@
         }
       },
       "notes": [
-        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=False; vote_missing_strategy=drop_rows"
+        "PRC input space = raw; PRC similarity = gauss; PRC sparse = True; baseline input space = raw; tune_baselines=False; prc_noise_last=False; preserve_init_diff_for_kmeans_dbscan_spectral=False; try_label_permutations_for_kmeans_spectral_dbscan=False; max_label_permutation_labels=8; tilo_selection_protocol=best_of_n_trials_with_pyprc.cless(n_trials=20); vote_missing_strategy=drop_rows"
       ],
       "tilo_trial_ari": {
         "NCUT": {
@@ -209,14 +232,33 @@
         }
       },
       "prc_policy": {
-        "recurse_tilo": true,
-        "reverse_order_on_split": true,
-        "return_recursive_order": true,
-        "refine_tilo": true,
+        "recurse_tilo": false,
+        "reverse_order_on_split": false,
+        "return_recursive_order": false,
+        "refine_tilo": false,
         "eval_all_metrics": false,
         "return_metrics": false,
         "tilo_max_iterations": 10000000,
         "tilo_epsilon": 1e-12
+      },
+      "graph_params": {
+        "similarity": "gauss",
+        "use_sparse": true,
+        "gauss_sigma_input": -1.0,
+        "gauss_mode": "0",
+        "gauss_threshold": 1e-10,
+        "gauss_sigma_used": 1.2683534159391054
+      },
+      "graph_stats": {
+        "n": 232,
+        "nnz": 53592,
+        "density": 0.9956896551724138,
+        "degree_min": 19.342610632664343,
+        "degree_mean": 41.15969145382465,
+        "degree_max": 57.927932484941515,
+        "edge_weight_min": 0.006923066241871518,
+        "edge_weight_mean": 0.17818048248408938,
+        "edge_weight_max": 1.0
       },
       "vote_missing_strategy": "drop_rows",
       "vote_removed_rows": 203,
