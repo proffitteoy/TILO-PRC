@@ -1,4 +1,4 @@
-===========================
+﻿===========================
 PRC/TILO 纯 Python 版本说明
 ===========================
 
@@ -24,7 +24,7 @@ Lexicographic Ordering）** 的纯 Python 实现。
 
 - 已完成主流程迁移：数据读取、相似度构图、TILO、PRC 递归切分、命令行入口
 - 已完成兼容入口：`import pyprc` 与 `import prc`
-- 已完成基础验证：样例数据、CLI、最小单元测试
+- 已完成基础验证：样例数据与 CLI 冒烟运行
 - 尚不能声称与历史 C++ 版本在所有输入、所有分支上逐位完全一致
 
 如果要把“逻辑一致”提升到可以严格背书的程度，需要继续做两类工作：
@@ -38,8 +38,8 @@ Lexicographic Ordering）** 的纯 Python 实现。
 ::
 
     prc_v0.1.05_d2013_04_30/
-    ├─ pyprc/                    Python 主实现
-    ├─ tests/                    样例数据与基础测试
+    ├─ src/pyprc/                    Python 主实现
+    ├─ datasets/                    数据集与样例输入
     ├─ doc/                      中文文档与论文 PDF
     ├─ pinchRatioClustering.py   CLI 入口
     ├─ genSimMatrix.py           CLI 入口
@@ -74,11 +74,11 @@ Lexicographic Ordering）** 的纯 Python 实现。
 
 ::
 
-    python pinchRatioClustering.py --dataInput tests/d1.txt --fileType 1 --adjNodeOffset 0 --numpart 2
+    python pinchRatioClustering.py --dataInput datasets/graphs/d1.txt --fileType 1 --adjNodeOffset 0 --numpart 2
 
 ::
 
-    python genSimMatrix.py tests/iris_all.txt tests/iris_sim_out.txt --fileType 0 --tagLoc 1
+    python genSimMatrix.py datasets/iris/iris_all.txt datasets/iris/iris_sim_out.txt --fileType 0 --tagLoc 1
 
 Python API
 ==========
@@ -142,3 +142,5 @@ Python API
 ======
 
 本仓库沿用原项目许可证：GPL-3.0-or-later。详见 `COPYING.GPL`。
+
+

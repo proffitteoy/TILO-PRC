@@ -1,0 +1,6 @@
+method,status,ari,nmi,purity,clusters,noise_ratio
+PRC(PinchRatio),ok,0.903768,0.885062,0.966667,3,0.0
+PRC(NCut),ok,0.732298,0.790679,0.893333,3,0.0
+K-Means,ok,0.730238,0.758176,0.893333,3,0.0
+DBSCAN,ok,0.563751,0.717464,0.68,2,0.013333
+HDBSCAN,ok(sklearn.cluster.HDBSCAN),0.568116,0.73368,0.666667,2,0.0

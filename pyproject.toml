@@ -21,5 +21,6 @@ pinchRatioClustering = "pyprc.cli_pinch_ratio_clustering:main"
 genSimMatrix = "pyprc.cli_gen_sim_matrix:main"
 
 [tool.setuptools]
+package-dir = {"" = "src"}
 packages = ["pyprc"]
 py-modules = ["prc"]

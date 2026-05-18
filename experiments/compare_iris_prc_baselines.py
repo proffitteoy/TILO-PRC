@@ -19,8 +19,9 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+SRC_ROOT = REPO_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 import pyprc
 
@@ -448,7 +449,7 @@ def save_ari_plot(rows: Sequence[Dict[str, object]], out_path: Path) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compare PRC/K-Means/DBSCAN/HDBSCAN on iris_all.txt")
-    parser.add_argument("--data", type=Path, default=Path("tests/iris_all.txt"))
+    parser.add_argument("--data", type=Path, default=Path("datasets/iris/iris_all.txt"))
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--numpart", type=int, default=3)
     parser.add_argument("--prc-runs", type=int, default=10)
@@ -475,7 +476,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dbscan-min-samples", type=int, default=5)
     parser.add_argument("--hdbscan-min-cluster-size", type=int, default=5)
     parser.add_argument("--hdbscan-min-samples", type=int, default=5)
-    parser.add_argument("--output-dir", type=Path, default=Path("experiments/output"))
+    parser.add_argument("--output-dir", type=Path, default=Path("outputs/experiments"))
     parser.add_argument("--csv-file", type=str, default="iris_compare_metrics.csv")
     parser.add_argument("--json-file", type=str, default="iris_compare_metrics.json")
     parser.add_argument("--plot-file", type=str, default="iris_compare_ari.png")

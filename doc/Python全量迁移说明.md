@@ -1,4 +1,4 @@
-# Python 全量迁移说明
+﻿# Python 全量迁移说明
 
 本文档描述当前仓库从早期 C++ 代码库整理为纯 Python 主线后的实现边界。
 
@@ -24,7 +24,7 @@
 
 对应入口：
 
-- `pyprc/core.py`
+- `src/pyprc/core.py`
 - `pinchRatioClustering.py`
 - `genSimMatrix.py`
 - `prc.py`
@@ -113,3 +113,4 @@
 4. 对递归和随机初始化分支单独建回归用例
 
 只有完成这一轮对照后，才能更强地声称“与原版逻辑一致”。
+

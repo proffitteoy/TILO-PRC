@@ -1,0 +1,36 @@
+{
+  "mode": "paper-values",
+  "note": "No experiment executed.",
+  "paper_reference_note": "Approximate ARI values digitized from the paper figure image. Iris references are currently usable; Vote references are pending re-digitization.",
+  "paper_reference": {
+    "iris": {
+      "TILO-NCUT": 0.62,
+      "TILO-PRC": 0.9,
+      "K Means": 0.73,
+      "TILO-PRC(K Means)": 0.9,
+      "Spectral": 0.79,
+      "TILO-PRC(Spectral)": 0.9,
+      "DBScan": 0.51,
+      "TILO-PRC(DBScan)": 0.9,
+      "Aff. Prop.": 0.54,
+      "TILO-PRC(Aff. Prop.)": 0.9,
+      "Mean Shift": 0.57,
+      "TILO-PRC(Mean Shift)": 0.9
+    },
+    "vote": {
+      "TILO-NCUT": null,
+      "TILO-PRC": null,
+      "K Means": null,
+      "TILO-PRC(K Means)": null,
+      "Spectral": null,
+      "TILO-PRC(Spectral)": null,
+      "DBScan": null,
+      "TILO-PRC(DBScan)": null,
+      "Aff. Prop.": null,
+      "TILO-PRC(Aff. Prop.)": null,
+      "Mean Shift": null,
+      "TILO-PRC(Mean Shift)": null
+    },
+    "vote_reference_status": "pending-redigitization"
+  }
+}

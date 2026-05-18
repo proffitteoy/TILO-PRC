@@ -11,13 +11,14 @@ import json
 import sys
 from itertools import product
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+SRC_ROOT = REPO_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 import pyprc
 from pyprc.pipeline import (
@@ -42,12 +43,17 @@ def load_data_from_file(path: Path) -> Tuple[np.ndarray, np.ndarray]:
 
 def resolve_vote_dataset_path(path: Path) -> Path:
     """Resolve vote dataset location without network download."""
-    candidates = [path, REPO_ROOT / "house-votes-84.data", REPO_ROOT / "tests/vote_all.txt"]
+    candidates = [
+        path,
+        REPO_ROOT / "house-votes-84.data",
+        REPO_ROOT / "datasets/vote/house-votes-84.data",
+        REPO_ROOT / "datasets/vote/vote_all.txt",
+    ]
     for candidate in candidates:
         if candidate.exists():
             return candidate
     raise FileNotFoundError(
-        "vote dataset not found. Please provide --vote-data or place house-votes-84.data at repo root."
+        "vote dataset not found. Please provide --vote-data or place datasets/vote/house-votes-84.data in repo."
     )
 
 
@@ -816,7 +822,7 @@ def run_all_methods(
     prc_noise_last: bool = False,
     vote_missing_strategy: str = "half",
     preserve_init_effect_for_baseline_init: bool = False,
-    try_label_permutations_for_seeded_baselines: bool = False,
+    try_label_permutations_for_seeded_baselines: bool = True,
     max_label_permutation_labels: int = 8,
 ) -> Tuple[Dict[str, float], Dict[str, Any]]:
     vote_removed_rows = 0
@@ -987,6 +993,9 @@ def run_all_methods(
             labels_ap.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
+            preserve_init_effect=preserve_init_effect_for_baseline_init,
+            try_label_permutations=try_label_permutations_for_seeded_baselines,
+            max_permutation_labels=max_label_permutation_labels,
         ).tolist(),
     )
 
@@ -1012,6 +1021,9 @@ def run_all_methods(
             labels_ms.tolist(),
             policy_template=policy_template,
             noise_last=prc_noise_last,
+            preserve_init_effect=preserve_init_effect_for_baseline_init,
+            try_label_permutations=try_label_permutations_for_seeded_baselines,
+            max_permutation_labels=max_label_permutation_labels,
         ).tolist(),
     )
 
@@ -1036,8 +1048,8 @@ def run_all_methods(
         f"PRC similarity = {prc_similarity}; PRC sparse = {prc_use_sparse}; "
         f"baseline input space = {baseline_input_space}; "
         f"tune_baselines={tune_baselines}; prc_noise_last={prc_noise_last}; "
-        f"preserve_init_diff_for_kmeans_dbscan_spectral={preserve_init_effect_for_baseline_init}; "
-        f"try_label_permutations_for_kmeans_spectral_dbscan={try_label_permutations_for_seeded_baselines}; "
+        f"preserve_init_diff_for_seeded_baselines={preserve_init_effect_for_baseline_init}; "
+        f"try_label_permutations_for_seeded_baselines={try_label_permutations_for_seeded_baselines}; "
         f"max_label_permutation_labels={max_label_permutation_labels}; "
         f"tilo_selection_protocol=best_of_n_trials_with_pyprc.cless(n_trials={n_trials}); "
         f"vote_missing_strategy={vote_missing_strategy if dataset_name.lower() == 'vote' else 'n/a'}"
@@ -1167,8 +1179,8 @@ def plot_paper_figure(
 # --- Paper reference values (read from figure) ---
 
 PAPER_REFERENCE_NOTE = (
-    "Approximate ARI values digitized from the provided paper figure image and "
-    "rounded to 2 decimals."
+    "Approximate ARI values digitized from the paper figure image. "
+    "Iris references are currently usable; Vote references are pending re-digitization."
 )
 
 PAPER_IRIS_ARI = {
@@ -1186,25 +1198,42 @@ PAPER_IRIS_ARI = {
     "TILO-PRC(Mean Shift)": 0.90,
 }
 
-PAPER_VOTE_ARI = {
-    "TILO-NCUT": 0.52,
-    "TILO-PRC": 0.82,
-    "K Means": 0.54,
-    "TILO-PRC(K Means)": 0.82,
-    "Spectral": 0.69,
-    "TILO-PRC(Spectral)": 0.82,
-    "DBScan": 0.01,
-    "TILO-PRC(DBScan)": 0.82,
-    "Aff. Prop.": 0.09,
-    "TILO-PRC(Aff. Prop.)": 0.82,
-    "Mean Shift": 0.00,
-    "TILO-PRC(Mean Shift)": 0.82,
+PAPER_VOTE_REFERENCE_STATUS = "pending-redigitization"
+PAPER_VOTE_ARI: Dict[str, Optional[float]] = {
+    "TILO-NCUT": None,
+    "TILO-PRC": None,
+    "K Means": None,
+    "TILO-PRC(K Means)": None,
+    "Spectral": None,
+    "TILO-PRC(Spectral)": None,
+    "DBScan": None,
+    "TILO-PRC(DBScan)": None,
+    "Aff. Prop.": None,
+    "TILO-PRC(Aff. Prop.)": None,
+    "Mean Shift": None,
+    "TILO-PRC(Mean Shift)": None,
 }
 
 
-def calc_delta_to_paper(results: Dict[str, float], paper: Dict[str, float]) -> Dict[str, float]:
+def _is_finite_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and bool(np.isfinite(float(value)))
+
+
+def materialize_reference_for_plot(reference: Mapping[str, Optional[float]]) -> Dict[str, float]:
+    return {k: float(v) if _is_finite_number(v) else 0.0 for k, v in reference.items()}
+
+
+def calc_delta_to_paper(
+    results: Dict[str, float], paper: Mapping[str, Optional[float]]
+) -> Dict[str, float]:
     keys = sorted(set(results.keys()) & set(paper.keys()))
-    return {k: round(results[k] - paper[k], 6) for k in keys}
+    delta: Dict[str, float] = {}
+    for k in keys:
+        paper_value = paper.get(k)
+        if not _is_finite_number(paper_value):
+            continue
+        delta[k] = round(results[k] - float(paper_value), 6)
+    return delta
 
 
 def run_vote_protocol_sweep(
@@ -1214,9 +1243,15 @@ def run_vote_protocol_sweep(
     tune_baselines: bool,
     prc_use_sparse: bool,
 ) -> Dict[str, Any]:
-    target = float(PAPER_VOTE_ARI["TILO-PRC"])
+    target_ref = PAPER_VOTE_ARI.get("TILO-PRC")
+    target: Optional[float] = float(target_ref) if _is_finite_number(target_ref) else None
     vote_paths: List[Path] = []
-    for candidate in [args.vote_data, REPO_ROOT / "house-votes-84.data", REPO_ROOT / "tests/vote_all.txt"]:
+    for candidate in [
+        args.vote_data,
+        REPO_ROOT / "house-votes-84.data",
+        REPO_ROOT / "datasets/vote/house-votes-84.data",
+        REPO_ROOT / "datasets/vote/vote_all.txt",
+    ]:
         p = Path(candidate)
         if p.exists() and p not in vote_paths:
             vote_paths.append(p)
@@ -1259,6 +1294,8 @@ def run_vote_protocol_sweep(
                             max_label_permutation_labels=int(args.max_label_permutation_labels),
                         )
                         vote_tilo_prc = float(results.get("TILO-PRC", 0.0))
+                        delta = round(vote_tilo_prc - target, 6) if target is not None else None
+                        abs_delta = round(abs(vote_tilo_prc - target), 6) if target is not None else None
                         sweep_rows.append(
                             {
                                 "vote_data": str(vote_path),
@@ -1267,15 +1304,23 @@ def run_vote_protocol_sweep(
                                 "prc_similarity": prc_similarity,
                                 "n_trials": int(n_trials),
                                 "tilo_prc": vote_tilo_prc,
-                                "delta_to_paper_tilo_prc": round(vote_tilo_prc - target, 6),
-                                "abs_delta_to_paper_tilo_prc": round(abs(vote_tilo_prc - target), 6),
+                                "delta_to_paper_tilo_prc": delta,
+                                "abs_delta_to_paper_tilo_prc": abs_delta,
                                 "details": details,
                             }
                         )
 
-    sweep_rows.sort(key=lambda x: x["abs_delta_to_paper_tilo_prc"])
+    if target is None:
+        sweep_rows.sort(key=lambda x: x["tilo_prc"], reverse=True)
+    else:
+        sweep_rows.sort(key=lambda x: x["abs_delta_to_paper_tilo_prc"])
     return {
         "target_vote_tilo_prc": target,
+        "target_note": (
+            "Vote paper target unavailable; rows are ranked by observed TILO-PRC descending."
+            if target is None
+            else "Rows are ranked by |TILO-PRC - paper target| ascending."
+        ),
         "total_runs": len(sweep_rows),
         "top_10": sweep_rows[:10],
         "runs": sweep_rows,
@@ -1286,8 +1331,8 @@ def run_vote_protocol_sweep(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Reproduce paper ARI comparison figure with diagnostics")
-    p.add_argument("--iris-data", type=Path, default=Path("tests/iris_all.txt"))
-    p.add_argument("--vote-data", type=Path, default=Path("house-votes-84.data"))
+    p.add_argument("--iris-data", type=Path, default=Path("datasets/iris/iris_all.txt"))
+    p.add_argument("--vote-data", type=Path, default=Path("datasets/vote/house-votes-84.data"))
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--iris-k", type=int, default=3)
     p.add_argument("--vote-k", type=int, default=2)
@@ -1296,8 +1341,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--vote-dbscan-eps", type=float, default=1.5)
     p.add_argument("--vote-dbscan-min-samples", type=int, default=5)
     p.add_argument("--n-trials", type=int, default=20)
-    p.add_argument("--output", type=Path, default=Path("experiments/output/paper_fig_ari_comparison.png"))
-    p.add_argument("--diagnostics", type=Path, default=Path("experiments/output/paper_fig_ari_diagnostics.json"))
+    p.add_argument("--output", type=Path, default=Path("outputs/experiments/paper_fig_ari_comparison.png"))
+    p.add_argument("--diagnostics", type=Path, default=Path("outputs/experiments/paper_fig_ari_diagnostics.json"))
     p.add_argument("--no-plot", action="store_true", help="Skip figure generation")
     p.add_argument("--use-paper-values", action="store_true", help="Use hardcoded paper ARI values for visual reference")
     p.add_argument(
@@ -1344,7 +1389,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--label-permutations-for-seeded-baselines",
         action="store_true",
-        help="Enable label-block permutation scan for KMeans/Spectral/DBSCAN initial order conversion.",
+        help="Enable label-block permutation scan for seeded baseline initial order conversion (default: enabled).",
     )
     p.add_argument(
         "--no-label-permutations-for-seeded-baselines",
@@ -1368,6 +1413,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Run Vote protocol sweep (missing strategy/data source/input space/similarity/n_trials).",
     )
+    p.set_defaults(label_permutations_for_seeded_baselines=True)
     return p.parse_args()
 
 
@@ -1381,10 +1427,9 @@ def apply_paper_profile_overrides(args: argparse.Namespace) -> None:
 
 
 def resolve_seeded_label_permutations(args: argparse.Namespace) -> bool:
-    enabled = bool(args.label_permutations_for_seeded_baselines)
     if bool(args.no_label_permutations_for_seeded_baselines):
         return False
-    return enabled
+    return bool(args.label_permutations_for_seeded_baselines)
 
 
 def main() -> int:
@@ -1396,7 +1441,7 @@ def main() -> int:
     if args.use_paper_values:
         print("Using hardcoded paper ARI values for visual reference only.")
         iris_results = PAPER_IRIS_ARI
-        vote_results = PAPER_VOTE_ARI
+        vote_results = materialize_reference_for_plot(PAPER_VOTE_ARI)
         diagnostics_payload = {
             "mode": "paper-values",
             "note": "No experiment executed.",
@@ -1404,6 +1449,7 @@ def main() -> int:
             "paper_reference": {
                 "iris": PAPER_IRIS_ARI,
                 "vote": PAPER_VOTE_ARI,
+                "vote_reference_status": PAPER_VOTE_REFERENCE_STATUS,
             },
         }
     else:
@@ -1453,10 +1499,11 @@ def main() -> int:
                 "vote_sweep": vote_sweep,
                 "paper_reference_note": PAPER_REFERENCE_NOTE,
                 "paper_reference_vote": PAPER_VOTE_ARI,
+                "paper_reference_vote_status": PAPER_VOTE_REFERENCE_STATUS,
             }
             args.no_plot = True
             iris_results = PAPER_IRIS_ARI
-            vote_results = PAPER_VOTE_ARI
+            vote_results = materialize_reference_for_plot(PAPER_VOTE_ARI)
         else:
             print(
                 f"Running Iris (n_trials={args.n_trials}, prc_input={args.prc_input_space}, "
@@ -1552,6 +1599,7 @@ def main() -> int:
                     "details": vote_details,
                 },
                 "paper_reference_note": PAPER_REFERENCE_NOTE,
+                "paper_reference_vote_status": PAPER_VOTE_REFERENCE_STATUS,
             }
 
     if args.no_plot:
