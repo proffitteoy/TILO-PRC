@@ -1,0 +1,36 @@
+{
+  "updated_at_utc": "2026-05-19T06:43:52.104455+00:00",
+  "started_at_utc": "2026-05-19T06:32:29.748390+00:00",
+  "elapsed_seconds": 682.3560650348663,
+  "config": {
+    "database": "aigc_propagation",
+    "host": "localhost",
+    "port": "5432",
+    "label_name": "risk",
+    "label_tier": "strong",
+    "label_values": [
+      "rumor",
+      "non_rumor"
+    ],
+    "window_values": [
+      50,
+      100,
+      200
+    ],
+    "min_total_nodes": 500,
+    "max_per_label": 100,
+    "edge_weight_mode": "relative_root_seconds",
+    "numpart": 2,
+    "seed": 42,
+    "resume": true,
+    "retry_errors": false,
+    "keep_intermediate": false
+  },
+  "progress": {
+    "total": 600,
+    "done": 600,
+    "failed": 0,
+    "pending": 0,
+    "last_task_id": "3874925368152668|window_200"
+  }
+}

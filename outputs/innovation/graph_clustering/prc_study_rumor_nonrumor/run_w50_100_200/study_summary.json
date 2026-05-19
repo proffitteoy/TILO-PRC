@@ -1,0 +1,84 @@
+{
+  "generated_at_utc": "2026-05-19T06:43:52.149567+00:00",
+  "config": {
+    "database": "aigc_propagation",
+    "host": "localhost",
+    "port": "5432",
+    "label_name": "risk",
+    "label_tier": "strong",
+    "label_values": [
+      "rumor",
+      "non_rumor"
+    ],
+    "window_values": [
+      50,
+      100,
+      200
+    ],
+    "min_total_nodes": 500,
+    "max_per_label": 100,
+    "edge_weight_mode": "relative_root_seconds",
+    "numpart": 2,
+    "seed": 42,
+    "resume": true,
+    "retry_errors": false,
+    "keep_intermediate": false
+  },
+  "counts": {
+    "catalog_total": 600,
+    "done_total": 600,
+    "failed_total": 0,
+    "pending_total": 0,
+    "roots_total": 200,
+    "windows_total": 3,
+    "done_by_label": {
+      "rumor": 300,
+      "non_rumor": 300
+    },
+    "done_by_window": {
+      "window_50": 200,
+      "window_100": 200,
+      "window_200": 200
+    }
+  },
+  "summary_by_label": {
+    "rumor": {
+      "n": 300.0,
+      "node_count_mean": 116.67333333333333,
+      "node_count_median": 100.0,
+      "edge_count_mean": 115.67333333333333,
+      "edge_count_median": 99.0,
+      "cut_ratio_mean": 0.032353826054535774,
+      "cut_ratio_median": 0.024220572818468088,
+      "ncut_mean": 0.1628668237495129,
+      "ncut_median": 0.1617982942950852,
+      "cluster_entropy_norm_mean": 0.5421234618450239,
+      "cluster_entropy_norm_median": 0.5148156530018302,
+      "largest_cluster_ratio_mean": 0.8432944444444445,
+      "largest_cluster_ratio_median": 0.885
+    },
+    "non_rumor": {
+      "n": 300.0,
+      "node_count_mean": 116.67666666666666,
+      "node_count_median": 100.0,
+      "edge_count_mean": 115.67666666666666,
+      "edge_count_median": 99.0,
+      "cut_ratio_mean": 0.021302899239354328,
+      "cut_ratio_median": 0.020517174605248226,
+      "ncut_mean": 0.1324811075403311,
+      "ncut_median": 0.11311297729298483,
+      "cluster_entropy_norm_mean": 0.4815687178895124,
+      "cluster_entropy_norm_median": 0.4364698170612175,
+      "largest_cluster_ratio_mean": 0.8660650618002976,
+      "largest_cluster_ratio_median": 0.91
+    }
+  },
+  "files": {
+    "roots_catalog_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\innovation\\graph_clustering\\prc_study_rumor_nonrumor\\run_w50_100_200\\roots_catalog.tsv",
+    "tasks_catalog_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\innovation\\graph_clustering\\prc_study_rumor_nonrumor\\run_w50_100_200\\tasks_catalog.tsv",
+    "per_tree_metrics_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\innovation\\graph_clustering\\prc_study_rumor_nonrumor\\run_w50_100_200\\per_tree_prc_metrics.tsv",
+    "errors_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\innovation\\graph_clustering\\prc_study_rumor_nonrumor\\run_w50_100_200\\errors.tsv",
+    "checkpoint_json": "F:\\prc_v1_d2026_04_24\\outputs\\innovation\\graph_clustering\\prc_study_rumor_nonrumor\\run_w50_100_200\\checkpoint.json",
+    "graph_dir": "F:\\prc_v1_d2026_04_24\\outputs\\innovation\\graph_clustering\\prc_study_rumor_nonrumor\\run_w50_100_200\\graphs"
+  }
+}

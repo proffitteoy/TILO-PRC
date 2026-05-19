@@ -112,17 +112,20 @@ python experiments/graph_clustering/run_rumor_nonrumor_prc_study.py --source-cod
 说明：
 
 - 脚本会为每棵传播树构建加权图（默认边权 `relative_root_seconds`），并运行 PRC。
-- 默认跑全量 rumor/non_rumor（不按树大小分类）；可用 `--max-per-label` 限制每类数量。
+- 默认按窗口任务运行：`--window-values 50,100,200,500,1000`，窗口总点数包含根节点。
+- 默认样本选择：`--label-values rumor,non_rumor`、`--max-per-label 100`、`--min-total-nodes 500`，即先选 `200` 棵树，再按 `5` 个窗口形成 `1000` 个任务。
 - 输出目录默认：`outputs/graph_clustering/prc_study_rumor_nonrumor/all_trees/`
 - 关键产物：
-  - `roots_catalog.tsv`：本次任务清单（固定 root 列表）
-  - `per_tree_prc_metrics.tsv`：每棵树的聚类指标（`cut_ratio`、`ncut`、`cluster_entropy_norm`、`largest_cluster_ratio` 等）
-  - `errors.tsv`：失败 root 与错误信息
+  - `roots_catalog.tsv`：本次选中的 root 列表
+  - `tasks_catalog.tsv`：`root × window` 的完整任务清单
+  - `per_tree_prc_metrics.tsv`：每个任务的聚类指标（`cut_ratio`、`ncut`、`cluster_entropy_norm`、`largest_cluster_ratio` 等）
+  - `errors.tsv`：失败任务与错误信息
   - `checkpoint.json`：当前进度（支持中断恢复）
   - `study_summary.json`：按 rumor/non_rumor 分组后的统计汇总
 - 断点恢复：
-  - 直接重复执行同一条命令即可自动跳过已完成 root（默认 `--resume` 开启）。
+  - 直接重复执行同一条命令即可自动跳过已完成 `task_id`（默认 `--resume` 开启）。
   - 如需重试失败项可加 `--retry-errors`。
+  - 若目录里已有旧版 `roots_catalog.tsv`（例如历史全量 293 树），请加 `--refresh-roots` 或换新 `--output-dir`，否则会沿用旧样本集。
 
 ## 仓库结构
 

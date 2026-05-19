@@ -26,11 +26,24 @@ DEFAULT_PSQL_PATH = Path(r"D:\PostgreSQL\bin\psql.exe")
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "graph_clustering" / "prc_study_rumor_nonrumor" / "all_trees"
 
 ROOT_FIELDS = ["index", "root_id", "label_value", "total_nodes", "root_created_at"]
+TASK_FIELDS = [
+    "index",
+    "task_id",
+    "root_id",
+    "label_value",
+    "total_nodes",
+    "root_created_at",
+    "window_name",
+    "requested_total_points",
+]
 RESULT_FIELDS = [
+    "task_id",
     "root_id",
     "label_value",
     "root_created_at",
     "total_nodes_from_db",
+    "window_name",
+    "requested_total_points",
     "node_count",
     "edge_count",
     "cluster_count",
@@ -46,10 +59,13 @@ RESULT_FIELDS = [
     "finished_at_utc",
 ]
 ERROR_FIELDS = [
+    "task_id",
     "root_id",
     "label_value",
     "root_created_at",
     "total_nodes_from_db",
+    "window_name",
+    "requested_total_points",
     "error_type",
     "error_message",
     "traceback",
@@ -83,6 +99,17 @@ class NodeRecord:
     is_root: bool
 
 
+@dataclass(frozen=True)
+class TaskRecord:
+    task_id: str
+    root_id: str
+    label_value: str
+    total_nodes: int
+    root_created_at: str
+    window_name: str
+    requested_total_points: int
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -101,15 +128,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--label-tier", choices=["all", "strong", "weak"], default="strong")
     parser.add_argument("--label-values", default="rumor,non_rumor")
     parser.add_argument(
+        "--window-values",
+        default="50,100,200,500,1000",
+        help="Comma-separated total point windows. Use empty string to disable window slicing.",
+    )
+    parser.add_argument(
         "--min-total-nodes",
         type=int,
-        default=0,
+        default=500,
         help="Filter roots by minimum total nodes. Use 0 to disable.",
     )
     parser.add_argument(
         "--max-per-label",
         type=int,
-        default=0,
+        default=100,
         help="Limit roots per label. Use 0 to process all available roots per label.",
     )
     parser.add_argument(
@@ -210,6 +242,26 @@ def parse_label_values(raw: str) -> list[str]:
     if not deduped:
         raise RuntimeError("--label-values cannot be empty.")
     return deduped
+
+
+def parse_window_values(raw: str) -> list[int]:
+    text = (raw or "").strip()
+    if not text:
+        return []
+    values: list[int] = []
+    seen: set[int] = set()
+    for item in text.split(","):
+        token = item.strip()
+        if not token:
+            continue
+        value = int(token)
+        if value <= 0:
+            raise RuntimeError(f"window value must be positive: {token}")
+        if value in seen:
+            continue
+        seen.add(value)
+        values.append(value)
+    return values
 
 
 def run_psql_sql(config: DbConfig, sql: str) -> str:
@@ -408,6 +460,62 @@ def load_roots_catalog(path: Path) -> list[CandidateRoot]:
     return roots
 
 
+def build_tasks(roots: list[CandidateRoot], window_values: list[int]) -> list[TaskRecord]:
+    tasks: list[TaskRecord] = []
+    if not window_values:
+        for root in roots:
+            task_id = f"{root.root_id}|full"
+            tasks.append(
+                TaskRecord(
+                    task_id=task_id,
+                    root_id=root.root_id,
+                    label_value=root.label_value,
+                    total_nodes=root.total_nodes,
+                    root_created_at=root.root_created_at,
+                    window_name="full",
+                    requested_total_points=0,
+                )
+            )
+        return tasks
+
+    for root in roots:
+        for value in window_values:
+            window_name = f"window_{value}"
+            task_id = f"{root.root_id}|{window_name}"
+            tasks.append(
+                TaskRecord(
+                    task_id=task_id,
+                    root_id=root.root_id,
+                    label_value=root.label_value,
+                    total_nodes=root.total_nodes,
+                    root_created_at=root.root_created_at,
+                    window_name=window_name,
+                    requested_total_points=value,
+                )
+            )
+    return tasks
+
+
+def write_tasks_catalog(path: Path, tasks: list[TaskRecord]) -> None:
+    ensure_tsv_header(path, TASK_FIELDS)
+    with path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=TASK_FIELDS, delimiter="\t")
+        writer.writeheader()
+        for idx, task in enumerate(tasks, start=1):
+            writer.writerow(
+                {
+                    "index": idx,
+                    "task_id": task.task_id,
+                    "root_id": task.root_id,
+                    "label_value": task.label_value,
+                    "total_nodes": task.total_nodes,
+                    "root_created_at": task.root_created_at,
+                    "window_name": task.window_name,
+                    "requested_total_points": task.requested_total_points,
+                }
+            )
+
+
 def safe_token(value: str) -> str:
     text = value.strip()
     if not text:
@@ -438,6 +546,45 @@ def fetch_nodes_for_root(config: DbConfig, root_id: str) -> list[NodeRecord]:
             )
         )
     return nodes
+
+
+def select_window_nodes(nodes: list[NodeRecord], requested_total_points: int) -> list[NodeRecord]:
+    if requested_total_points <= 0:
+        return nodes
+    node_map = {node.node_id: node for node in nodes}
+    roots = [node for node in nodes if node.is_root]
+    if len(roots) != 1:
+        raise RuntimeError(f"invalid root count when slicing window: {len(roots)}")
+    root = roots[0]
+    descendants = [node for node in nodes if not node.is_root]
+    descendants.sort(key=lambda n: (n.created_at, n.node_id))
+
+    keep_desc_count = max(0, requested_total_points - 1)
+    if keep_desc_count >= len(descendants):
+        selected_descendants = descendants
+    else:
+        selected_descendants = descendants[:keep_desc_count]
+
+    keep_ids: set[str] = {root.node_id}
+    stack: list[str] = []
+    for node in selected_descendants:
+        if node.node_id not in keep_ids:
+            keep_ids.add(node.node_id)
+            stack.append(node.node_id)
+
+    while stack:
+        node_id = stack.pop()
+        node = node_map.get(node_id)
+        if node is None:
+            continue
+        parent_id = node.parent_id
+        if parent_id and parent_id in node_map and parent_id not in keep_ids:
+            keep_ids.add(parent_id)
+            stack.append(parent_id)
+
+    selected = [node for node in nodes if node.node_id in keep_ids]
+    selected.sort(key=lambda n: (0 if n.is_root else 1, n.created_at, n.node_id))
+    return selected
 
 
 def build_graph(nodes: list[NodeRecord], edge_weight_mode: str) -> tuple[list[dict[int, float]], list[NodeRecord], int]:
@@ -609,8 +756,16 @@ def summarize_by_label(rows: list[dict[str, str]], label_values: list[str]) -> d
 
 
 def load_processed_ids(results_path: Path, errors_path: Path, retry_errors: bool) -> tuple[set[str], set[str]]:
-    done_ids = {row["root_id"] for row in read_tsv_dicts(results_path) if row.get("root_id")}
-    err_ids = {row["root_id"] for row in read_tsv_dicts(errors_path) if row.get("root_id")}
+    done_ids = {
+        (row.get("task_id") or f"{row.get('root_id','')}|full")
+        for row in read_tsv_dicts(results_path)
+        if row.get("task_id") or row.get("root_id")
+    }
+    err_ids = {
+        (row.get("task_id") or f"{row.get('root_id','')}|full")
+        for row in read_tsv_dicts(errors_path)
+        if row.get("task_id") or row.get("root_id")
+    }
     if retry_errors:
         err_ids = set()
     return done_ids, err_ids
@@ -624,7 +779,7 @@ def write_checkpoint(
     done: int,
     failed: int,
     pending: int,
-    last_root_id: str,
+    last_task_id: str,
     started_at: datetime,
 ) -> None:
     payload = {
@@ -637,7 +792,7 @@ def write_checkpoint(
             "done": done,
             "failed": failed,
             "pending": pending,
-            "last_root_id": last_root_id,
+            "last_task_id": last_task_id,
         },
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -649,10 +804,12 @@ def main() -> int:
         raise RuntimeError("--numpart must be >= 2")
 
     label_values = parse_label_values(args.label_values)
+    window_values = parse_window_values(args.window_values)
     db = resolve_db_config(args)
     out_dir = Path(args.output_dir)
     graph_dir = out_dir / "graphs"
     roots_catalog_path = out_dir / "roots_catalog.tsv"
+    tasks_catalog_path = out_dir / "tasks_catalog.tsv"
     results_path = out_dir / "per_tree_prc_metrics.tsv"
     errors_path = out_dir / "errors.tsv"
     checkpoint_path = out_dir / "checkpoint.json"
@@ -673,17 +830,22 @@ def main() -> int:
         )
         write_roots_catalog(roots_catalog_path, roots)
 
+    tasks = build_tasks(roots, window_values)
+    write_tasks_catalog(tasks_catalog_path, tasks)
+
     ensure_tsv_header(results_path, RESULT_FIELDS)
     ensure_tsv_header(errors_path, ERROR_FIELDS)
 
     done_ids, err_ids = load_processed_ids(results_path, errors_path, args.retry_errors)
+    task_id_set = {task.task_id for task in tasks}
+    done_ids = {task_id for task_id in done_ids if task_id in task_id_set}
+    err_ids = {task_id for task_id in err_ids if task_id in task_id_set}
     if not args.resume:
         done_ids = set()
-        if args.retry_errors:
-            err_ids = set()
+        err_ids = set()
 
-    pending = [root for root in roots if root.root_id not in done_ids and root.root_id not in err_ids]
-    total_count = len(roots)
+    pending = [task for task in tasks if task.task_id not in done_ids and task.task_id not in err_ids]
+    total_count = len(tasks)
     done_count = len(done_ids)
     fail_count = len(err_ids)
     started_at = datetime.now(timezone.utc)
@@ -695,6 +857,7 @@ def main() -> int:
         "label_name": args.label_name,
         "label_tier": args.label_tier,
         "label_values": label_values,
+        "window_values": window_values,
         "min_total_nodes": args.min_total_nodes,
         "max_per_label": args.max_per_label,
         "edge_weight_mode": args.edge_weight_mode,
@@ -712,60 +875,74 @@ def main() -> int:
         done=done_count,
         failed=fail_count,
         pending=len(pending),
-        last_root_id="",
+        last_task_id="",
         started_at=started_at,
     )
 
-    for idx, root in enumerate(pending, start=1):
-        root_start = time.time()
-        last_root = root.root_id
+    nodes_cache: dict[str, list[NodeRecord]] = {}
+    for idx, task in enumerate(pending, start=1):
+        task_start = time.time()
+        last_task = task.task_id
         try:
-            nodes = fetch_nodes_for_root(db, root.root_id)
+            if task.root_id not in nodes_cache:
+                nodes_cache[task.root_id] = fetch_nodes_for_root(db, task.root_id)
+            full_nodes = nodes_cache[task.root_id]
+            nodes = select_window_nodes(full_nodes, task.requested_total_points)
             if not nodes:
                 raise RuntimeError("no nodes fetched")
             adjacency, ordered_nodes, edge_count = build_graph(nodes, args.edge_weight_mode)
-            token = safe_token(root.root_id)
-            graph_path = graph_dir / f"{token}.metis"
+            token = safe_token(task.root_id)
+            graph_name = f"{token}__{task.window_name}"
+            graph_path = graph_dir / f"{graph_name}.metis"
             write_metis(graph_path, adjacency)
             labels, label_path = run_prc(
                 graph_path=graph_path,
                 numpart=args.numpart,
                 seed=args.seed,
-                info_suffix=f"_{token}_study",
+                info_suffix=f"_{graph_name}_study",
             )
             if len(labels) != len(ordered_nodes):
                 raise RuntimeError(f"label count mismatch: labels={len(labels)} nodes={len(ordered_nodes)}")
             metrics = cluster_metrics(labels, adjacency)
             row = {
-                "root_id": root.root_id,
-                "label_value": root.label_value,
-                "root_created_at": root.root_created_at,
-                "total_nodes_from_db": root.total_nodes,
+                "task_id": task.task_id,
+                "root_id": task.root_id,
+                "label_value": task.label_value,
+                "root_created_at": task.root_created_at,
+                "total_nodes_from_db": task.total_nodes,
+                "window_name": task.window_name,
+                "requested_total_points": task.requested_total_points,
                 "node_count": len(ordered_nodes),
                 "edge_count": edge_count,
                 "edge_weight_mode": args.edge_weight_mode,
                 "numpart": args.numpart,
                 "seed": args.seed,
-                "runtime_seconds": f"{time.time() - root_start:.6f}",
+                "runtime_seconds": f"{time.time() - task_start:.6f}",
                 "finished_at_utc": datetime.now(timezone.utc).isoformat(),
                 **metrics,
             }
             append_tsv_row(results_path, RESULT_FIELDS, row)
             done_count += 1
-            done_ids.add(root.root_id)
+            done_ids.add(task.task_id)
 
             if not args.keep_intermediate:
                 for path in (graph_path, label_path):
                     if path.exists():
                         path.unlink()
 
-            print(f"[{idx}/{len(pending)}] done root={root.root_id} label={root.label_value}")
+            print(
+                f"[{idx}/{len(pending)}] done task={task.task_id} "
+                f"root={task.root_id} label={task.label_value}"
+            )
         except Exception as exc:
             err_row = {
-                "root_id": root.root_id,
-                "label_value": root.label_value,
-                "root_created_at": root.root_created_at,
-                "total_nodes_from_db": root.total_nodes,
+                "task_id": task.task_id,
+                "root_id": task.root_id,
+                "label_value": task.label_value,
+                "root_created_at": task.root_created_at,
+                "total_nodes_from_db": task.total_nodes,
+                "window_name": task.window_name,
+                "requested_total_points": task.requested_total_points,
                 "error_type": exc.__class__.__name__,
                 "error_message": str(exc),
                 "traceback": traceback.format_exc(limit=20),
@@ -773,8 +950,8 @@ def main() -> int:
             }
             append_tsv_row(errors_path, ERROR_FIELDS, err_row)
             fail_count += 1
-            err_ids.add(root.root_id)
-            print(f"[{idx}/{len(pending)}] failed root={root.root_id} label={root.label_value}: {exc}")
+            err_ids.add(task.task_id)
+            print(f"[{idx}/{len(pending)}] failed task={task.task_id}: {exc}")
         finally:
             remaining = total_count - done_count - fail_count
             write_checkpoint(
@@ -784,11 +961,23 @@ def main() -> int:
                 done=done_count,
                 failed=fail_count,
                 pending=max(0, remaining),
-                last_root_id=last_root,
+                last_task_id=last_task,
                 started_at=started_at,
             )
 
     result_rows = read_tsv_dicts(results_path)
+    done_by_label = {
+        label: int(sum(1 for row in result_rows if row.get("label_value") == label))
+        for label in label_values
+    }
+    done_by_window = {}
+    if window_values:
+        for value in window_values:
+            name = f"window_{value}"
+            done_by_window[name] = int(sum(1 for row in result_rows if row.get("window_name") == name))
+    else:
+        done_by_window["full"] = int(sum(1 for row in result_rows if row.get("window_name", "full") == "full"))
+
     summary = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "config": run_config,
@@ -797,14 +986,15 @@ def main() -> int:
             "done_total": done_count,
             "failed_total": fail_count,
             "pending_total": max(0, total_count - done_count - fail_count),
-            "done_by_label": {
-                label: int(sum(1 for row in result_rows if row.get("label_value") == label))
-                for label in label_values
-            },
+            "roots_total": len(roots),
+            "windows_total": len(window_values) if window_values else 1,
+            "done_by_label": done_by_label,
+            "done_by_window": done_by_window,
         },
         "summary_by_label": summarize_by_label(result_rows, label_values),
         "files": {
             "roots_catalog_tsv": str(roots_catalog_path.resolve()),
+            "tasks_catalog_tsv": str(tasks_catalog_path.resolve()),
             "per_tree_metrics_tsv": str(results_path.resolve()),
             "errors_tsv": str(errors_path.resolve()),
             "checkpoint_json": str(checkpoint_path.resolve()),
@@ -824,3 +1014,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
