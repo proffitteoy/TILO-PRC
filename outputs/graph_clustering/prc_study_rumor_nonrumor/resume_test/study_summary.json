@@ -1,0 +1,71 @@
+{
+  "generated_at_utc": "2026-05-18T12:59:33.694399+00:00",
+  "config": {
+    "database": "aigc_propagation",
+    "host": "localhost",
+    "port": "5432",
+    "label_name": "risk",
+    "label_tier": "strong",
+    "label_values": [
+      "rumor",
+      "non_rumor"
+    ],
+    "min_total_nodes": 300,
+    "max_per_label": 1,
+    "edge_weight_mode": "relative_root_seconds",
+    "numpart": 2,
+    "seed": 42,
+    "resume": true,
+    "retry_errors": false,
+    "keep_intermediate": false
+  },
+  "counts": {
+    "catalog_total": 2,
+    "done_total": 2,
+    "failed_total": 0,
+    "pending_total": 0,
+    "done_by_label": {
+      "rumor": 1,
+      "non_rumor": 1
+    }
+  },
+  "summary_by_label": {
+    "rumor": {
+      "n": 1.0,
+      "node_count_mean": 1000.0,
+      "node_count_median": 1000.0,
+      "edge_count_mean": 999.0,
+      "edge_count_median": 999.0,
+      "cut_ratio_mean": 0.037741522121810395,
+      "cut_ratio_median": 0.037741522121810395,
+      "ncut_mean": 0.09587128767460343,
+      "ncut_median": 0.09587128767460343,
+      "cluster_entropy_norm_mean": 0.9169567260793559,
+      "cluster_entropy_norm_median": 0.9169567260793559,
+      "largest_cluster_ratio_mean": 0.668,
+      "largest_cluster_ratio_median": 0.668
+    },
+    "non_rumor": {
+      "n": 1.0,
+      "node_count_mean": 1000.0,
+      "node_count_median": 1000.0,
+      "edge_count_mean": 999.0,
+      "edge_count_median": 999.0,
+      "cut_ratio_mean": 5.6739889354223146e-05,
+      "cut_ratio_median": 5.6739889354223146e-05,
+      "ncut_mean": 0.0495226105841691,
+      "ncut_median": 0.0495226105841691,
+      "cluster_entropy_norm_mean": 0.029464051842036893,
+      "cluster_entropy_norm_median": 0.029464051842036893,
+      "largest_cluster_ratio_mean": 0.997,
+      "largest_cluster_ratio_median": 0.997
+    }
+  },
+  "files": {
+    "roots_catalog_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\prc_study_rumor_nonrumor\\resume_test\\roots_catalog.tsv",
+    "per_tree_metrics_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\prc_study_rumor_nonrumor\\resume_test\\per_tree_prc_metrics.tsv",
+    "errors_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\prc_study_rumor_nonrumor\\resume_test\\errors.tsv",
+    "checkpoint_json": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\prc_study_rumor_nonrumor\\resume_test\\checkpoint.json",
+    "graph_dir": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\prc_study_rumor_nonrumor\\resume_test\\graphs"
+  }
+}

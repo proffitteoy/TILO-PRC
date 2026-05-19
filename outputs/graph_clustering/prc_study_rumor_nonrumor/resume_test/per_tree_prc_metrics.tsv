@@ -1,0 +1,3 @@
+﻿root_id	label_value	root_created_at	total_nodes_from_db	node_count	edge_count	cluster_count	cut_ratio	ncut	cluster_entropy_norm	largest_cluster_ratio	cluster_sizes_json	edge_weight_mode	numpart	seed	runtime_seconds	finished_at_utc
+3453646882841201	rumor	2012-06-05 19:50:46+08	1000	1000	999	2.0	0.037741522121810395	0.09587128767460343	0.9169567260793559	0.668	"{""0"":332,""1"":668}"	relative_root_seconds	2	42	168.091850	2026-05-18T12:57:05.453786+00:00
+3773641642622642	non_rumor	2014-11-05 20:15:41+08	1000	1000	999	2.0	5.6739889354223146e-05	0.0495226105841691	0.029464051842036893	0.997	"{""0"":997,""1"":3}"	relative_root_seconds	2	42	136.787758	2026-05-18T12:59:22.242548+00:00

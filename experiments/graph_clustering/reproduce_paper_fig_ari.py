@@ -1,8 +1,8 @@
 """Reproduce PRC paper ARI figure (Iris + Vote) with diagnostics.
 
 Usage:
-    python experiments/reproduce_paper_fig_ari.py
-    python experiments/reproduce_paper_fig_ari.py --use-paper-values
+    python experiments/graph_clustering/reproduce_paper_fig_ari.py
+    python experiments/graph_clustering/reproduce_paper_fig_ari.py --use-paper-values
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Seque
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))

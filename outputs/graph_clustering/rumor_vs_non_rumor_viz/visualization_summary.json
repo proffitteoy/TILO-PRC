@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-05-18T11:44:03.041571+00:00",
+  "db": {
+    "host": "localhost",
+    "port": "5432",
+    "database": "aigc_propagation",
+    "user": "postgres",
+    "psql_path": "D:\\PostgreSQL\\bin\\psql.exe"
+  },
+  "label_name": "risk",
+  "label_tier": "strong",
+  "label_values": [
+    "rumor",
+    "non_rumor"
+  ],
+  "min_total_nodes": 50,
+  "sample_per_label": 4,
+  "metric_limit_per_label": 60,
+  "sample_roots_by_label": {
+    "rumor": [
+      "3453646882841201",
+      "3458052025942521",
+      "3458738764029954",
+      "3460120078103292"
+    ],
+    "non_rumor": [
+      "3773641642622642",
+      "3777481372829776",
+      "3791017318753751",
+      "3824571763243946"
+    ]
+  },
+  "metric_tree_count_by_label": {
+    "rumor": 60,
+    "non_rumor": 60
+  },
+  "files": {
+    "sample_trees_panel": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\rumor_vs_non_rumor_viz\\sample_trees_panel.svg",
+    "metric_boxplots": [
+      "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\rumor_vs_non_rumor_viz\\node_count_boxplot.svg",
+      "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\rumor_vs_non_rumor_viz\\duration_hours_boxplot.svg",
+      "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\rumor_vs_non_rumor_viz\\max_depth_boxplot.svg",
+      "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\rumor_vs_non_rumor_viz\\branching_factor_boxplot.svg",
+      "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\rumor_vs_non_rumor_viz\\mean_parent_lag_hours_boxplot.svg"
+    ],
+    "tree_metrics_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\rumor_vs_non_rumor_viz\\tree_metrics.tsv"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-05-18T12:45:14.501318+00:00",
+  "config": {
+    "database": "aigc_propagation",
+    "host": "localhost",
+    "port": "5432",
+    "label_name": "risk",
+    "label_tier": "strong",
+    "label_values": [
+      "rumor",
+      "non_rumor"
+    ],
+    "sample_per_label": 3,
+    "min_total_nodes": 300,
+    "edge_weight_mode": "relative_root_seconds",
+    "numpart": 2,
+    "seed": 42
+  },
+  "counts": {
+    "selected_total": 6,
+    "result_total": 6,
+    "by_label": {
+      "rumor": 3,
+      "non_rumor": 3
+    }
+  },
+  "summary_by_label": {
+    "rumor": {
+      "n": 3.0,
+      "node_count_mean": 1000.0,
+      "node_count_median": 1000.0,
+      "edge_count_mean": 999.0,
+      "edge_count_median": 999.0,
+      "cut_ratio_mean": 0.01540983801138776,
+      "cut_ratio_median": 0.0046594483774008025,
+      "ncut_mean": 0.06209413205688257,
+      "ncut_median": 0.07781543811965097,
+      "cluster_entropy_norm_mean": 0.4289204314853235,
+      "cluster_entropy_norm_median": 0.22836402583767926,
+      "largest_cluster_ratio_mean": 0.8703333333333333,
+      "largest_cluster_ratio_median": 0.963
+    },
+    "non_rumor": {
+      "n": 3.0,
+      "node_count_mean": 1000.0,
+      "node_count_median": 1000.0,
+      "edge_count_mean": 999.0,
+      "edge_count_median": 999.0,
+      "cut_ratio_mean": 0.00018591619663444698,
+      "cut_ratio_median": 0.00012060327990247687,
+      "ncut_mean": 0.022776736500498294,
+      "ncut_median": 0.012268916669384034,
+      "cluster_entropy_norm_mean": 0.05620937819334741,
+      "cluster_entropy_norm_median": 0.029464051842036893,
+      "largest_cluster_ratio_mean": 0.993,
+      "largest_cluster_ratio_median": 0.997
+    }
+  },
+  "files": {
+    "per_tree_metrics_tsv": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\prc_study_rumor_nonrumor\\run_20260518_202800\\per_tree_prc_metrics.tsv",
+    "graph_dir": "F:\\prc_v1_d2026_04_24\\outputs\\graph_clustering\\prc_study_rumor_nonrumor\\run_20260518_202800\\graphs"
+  }
+}
