@@ -2,6 +2,10 @@
 
 基于拓扑内在字典序排序（TILO）的 Pinch Ratio 聚类算法纯 Python 实现。
 
+## 理论审判路线
+
+新增 [TILO / PRC Theory Audit](research/theory-audit/README.md)。该路线暂停继续堆应用实验，集中研究 global thin ordering 与 cutwidth/layout 的精确关系、pinch cluster 的离散能量势垒解释、PRC 相对 Cheeger/NCut/spectral sweep 的近似或分离性质，以及相关复杂性问题。首轮采用小型无标号图 exact enumeration，并在 48 小时后强制给出 revive/kill 结论。实验协议见 [EXPERIMENT_SPEC.md](research/theory-audit/EXPERIMENT_SPEC.md)。
+
 ## 环境要求
 
 - Python 3.10+
